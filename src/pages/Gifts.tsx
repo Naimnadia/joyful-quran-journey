@@ -83,6 +83,11 @@ const Gifts = () => {
   const deleteGift = (giftId: string) => {
     setGifts(gifts.filter(gift => gift.id !== giftId));
     toast.success("Cadeau supprimé avec succès");
+    
+    // If we're editing the gift that was just deleted, reset the form
+    if (editingGiftId === giftId) {
+      resetForm();
+    }
   };
 
   // Save a new gift or update an existing one
@@ -201,7 +206,7 @@ const Gifts = () => {
                 </Button>
                 {newGiftImage && (
                   <Button
-                    variant="destructive"
+                    variant="outline"
                     onClick={() => setNewGiftImage(undefined)}
                     leftIcon={<Trash2 size={18} />}
                   >
@@ -302,7 +307,7 @@ const Gifts = () => {
                       variant="secondary"
                       onClick={() => startEditingGift(gift)}
                       leftIcon={<Edit size={16} />}
-                      small
+                      size="sm"
                     >
                       Modifier
                     </Button>
@@ -310,9 +315,10 @@ const Gifts = () => {
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           leftIcon={<Trash2 size={16} />}
-                          small
+                          size="sm"
+                          className="text-red-500 border-red-500 hover:bg-red-50"
                         >
                           Supprimer
                         </Button>
@@ -322,6 +328,11 @@ const Gifts = () => {
                           <AlertDialogTitle>Êtes-vous sûr?</AlertDialogTitle>
                           <AlertDialogDescription>
                             Cette action ne peut pas être annulée. Ce cadeau sera définitivement supprimé.
+                            {gift.assignedToChildId && (
+                              <p className="mt-2 text-red-500 font-medium">
+                                Attention: Ce cadeau est assigné à un enfant.
+                              </p>
+                            )}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

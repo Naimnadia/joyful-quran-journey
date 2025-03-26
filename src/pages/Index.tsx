@@ -410,7 +410,7 @@ const Index = () => {
               </div>
               <Button
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={() => navigate('/gifts')}
                 className="text-theme-purple hover:text-theme-purple/80 hover:bg-theme-purple/10"
               >
