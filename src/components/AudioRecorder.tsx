@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Mic, Square, Play, Save, AlertCircle } from 'lucide-react';
 import Button from './UI/Button';
@@ -21,7 +20,6 @@ const AudioRecorder = ({ date, onSaveRecording, existingRecording }: AudioRecord
   const timerRef = useRef<number | null>(null);
   
   useEffect(() => {
-    // Request microphone permission
     const getMicrophonePermission = async () => {
       try {
         const streamData = await navigator.mediaDevices.getUserMedia({
@@ -39,7 +37,6 @@ const AudioRecorder = ({ date, onSaveRecording, existingRecording }: AudioRecord
     getMicrophonePermission();
     
     return () => {
-      // Clean up timer on unmount
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -58,12 +55,10 @@ const AudioRecorder = ({ date, onSaveRecording, existingRecording }: AudioRecord
     setRecordingTime(0);
     audioChunksRef.current = [];
 
-    // Start timer
     timerRef.current = window.setInterval(() => {
       setRecordingTime((prevTime) => prevTime + 1);
     }, 1000);
     
-    // Start recording
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
         const mediaRecorder = new MediaRecorder(stream);
@@ -78,7 +73,6 @@ const AudioRecorder = ({ date, onSaveRecording, existingRecording }: AudioRecord
           const audioUrl = URL.createObjectURL(audioBlob);
           setAudioUrl(audioUrl);
           
-          // Stop all tracks on the stream to release the microphone
           stream.getTracks().forEach(track => track.stop());
         };
         

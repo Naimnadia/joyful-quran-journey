@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, parseISO, isValid } from 'date-fns';
@@ -15,6 +14,7 @@ interface Recording {
 }
 
 const Record = () => {
+  
   const { date } = useParams<{ date?: string }>();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<string>(
