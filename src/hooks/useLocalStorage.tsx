@@ -3,14 +3,13 @@ import { useGlobalState } from './useGlobalState';
 import { toast } from 'sonner';
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
-  const { getStateProperty, setStateProperty } = useGlobalState();
-  const globalState = getStateProperty('state');
+  const { state } = useGlobalState();
   
   // Use local state as a fallback for the global state
   const [localValue, setLocalValue] = useState<T>(() => {
     // Get the value from global state first if available
-    if (key in globalState) {
-      return (globalState as any)[key] as T;
+    if (state && key in state) {
+      return (state as any)[key] as T;
     }
     
     // Otherwise try to get from localStorage
@@ -35,11 +34,6 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       
       // Save to local state
       setLocalValue(valueToStore);
-      
-      // Update global state if possible
-      if (key in globalState) {
-        setStateProperty(key as any, valueToStore as any);
-      }
       
       // Save to localStorage as backup
       if (typeof window !== 'undefined') {

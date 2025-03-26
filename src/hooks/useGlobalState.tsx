@@ -50,8 +50,6 @@ type GlobalStateContextType = {
   state: GlobalState;
   setState: React.Dispatch<React.SetStateAction<GlobalState>>;
   setSelectedChild: (child: Child | null) => void;
-  getStateProperty: <K extends keyof GlobalState>(key: K) => GlobalState[K];
-  setStateProperty: <K extends keyof GlobalState>(key: K, value: GlobalState[K]) => void;
 };
 
 // Default state
@@ -92,19 +90,6 @@ export const GlobalStateProvider: React.FC<{ children: React.ReactNode }> = ({ c
       selectedChild: child
     }));
   };
-  
-  // Helper function to get a specific property from the state
-  const getStateProperty = <K extends keyof GlobalState>(key: K): GlobalState[K] => {
-    return state[key];
-  };
-  
-  // Helper function to set a specific property in the state
-  const setStateProperty = <K extends keyof GlobalState>(key: K, value: GlobalState[K]): void => {
-    setState(prevState => ({
-      ...prevState,
-      [key]: value
-    }));
-  };
 
   // Effect to sync with Supabase
   useEffect(() => {
@@ -116,9 +101,7 @@ export const GlobalStateProvider: React.FC<{ children: React.ReactNode }> = ({ c
     <GlobalStateContext.Provider value={{ 
       state, 
       setState, 
-      setSelectedChild,
-      getStateProperty,
-      setStateProperty
+      setSelectedChild
     }}>
       {children}
     </GlobalStateContext.Provider>
