@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
-import { Mic, Coins, BookOpen, Star, User, ChevronDown, Gift, Settings, Calendar as CalendarIcon, BarChart3 } from 'lucide-react';
+import { Mic, Coins, BookOpen, Star, User, ChevronDown, Gift, Settings } from 'lucide-react';
 import Header from '@/components/Header';
 import Calendar from '@/components/Calendar';
 import Token from '@/components/Token';
@@ -11,14 +10,6 @@ import Button from '@/components/UI/Button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { toast } from 'sonner';
 import { Child, CompletedDay, Recording, TokenType, Gift as GiftType } from '@/types';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -108,31 +99,23 @@ const Index = () => {
   
   if (children.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="pt-24 pb-10 px-4">
-          <Header />
-          
-          <div className="container max-w-md mx-auto mt-12">
-            <Card className="border-none shadow-xl bg-white/80 backdrop-blur-md animate-fade-in">
-              <CardHeader className="text-center pb-2">
-                <User size={60} className="text-theme-purple mx-auto mb-2" />
-                <CardTitle className="text-2xl font-bold">Bienvenue sur Daily Coran</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Pour commencer, ajoutez un enfant pour suivre sa progression quotidienne.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="pt-2 pb-6 flex justify-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  onClick={() => navigate('/children')}
-                  className="rounded-xl shadow-md hover:shadow-lg transition-all"
-                >
-                  Ajouter un enfant
-                </Button>
-              </CardFooter>
-            </Card>
+      <div className="min-h-screen pt-24 pb-10 px-4 bg-gradient-to-b from-blue-50 to-purple-50">
+        <Header />
+        
+        <div className="container max-w-md mx-auto space-y-6">
+          <div className="glass-card rounded-2xl p-6 text-center animate-fade-in">
+            <User size={48} className="text-theme-purple mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Bienvenue sur Daily Coran</h2>
+            <p className="text-gray-600 mb-6">
+              Pour commencer, ajoutez un enfant pour suivre sa progression quotidienne de lecture du Coran.
+            </p>
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={() => navigate('/children')}
+            >
+              Ajouter un enfant
+            </Button>
           </div>
         </div>
       </div>
@@ -334,181 +317,140 @@ const Index = () => {
   const unassignedGifts = gifts.filter(gift => !gift.assignedToChildId);
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="pt-24 pb-10 px-4">
-        <Header />
+    <div className="min-h-screen pt-24 pb-10 px-4 bg-gradient-to-b from-blue-50 to-purple-50">
+      <Header />
+      
+      <div className="container max-w-md mx-auto space-y-6">
+        {children.length > 1 && (
+          <div className="flex justify-center animate-fade-in">
+            <div className="glass-card rounded-full px-4 py-2 inline-flex items-center">
+              <User size={16} className="text-theme-purple mr-2" />
+              <select
+                value={selectedChildId || ''}
+                onChange={(e) => {
+                  setSelectedChildId(e.target.value);
+                  navigate(`/?childId=${e.target.value}`);
+                }}
+                className="bg-transparent border-none text-theme-purple font-medium focus:outline-none"
+              >
+                {children.map(child => (
+                  <option key={child.id} value={child.id}>{child.name}</option>
+                ))}
+              </select>
+              <ChevronDown size={16} className="text-theme-purple ml-1" />
+            </div>
+          </div>
+        )}
         
-        <div className="container max-w-xl mx-auto space-y-6">
-          {children.length > 1 && (
-            <div className="flex justify-center animate-fade-in mt-2">
-              <div className="glass-card bg-white/70 rounded-full px-4 py-2 inline-flex items-center shadow-md">
-                <User size={18} className="text-theme-purple mr-2" />
-                <select
-                  value={selectedChildId || ''}
-                  onChange={(e) => {
-                    setSelectedChildId(e.target.value);
-                    navigate(`/?childId=${e.target.value}`);
-                  }}
-                  className="bg-transparent border-none text-theme-purple font-medium focus:outline-none pr-8"
-                >
-                  {children.map(child => (
-                    <option key={child.id} value={child.id}>{child.name}</option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="text-theme-purple ml-1 -mr-6" />
+        <div className="grid grid-cols-3 gap-3 animate-fade-in">
+          <div className="glass-card rounded-2xl p-3 text-center">
+            <div className="text-theme-blue text-2xl font-bold">{streak}</div>
+            <div className="text-xs text-gray-600">Jours consécutifs</div>
+          </div>
+          
+          <div className="glass-card rounded-2xl p-3 text-center">
+            <div className="text-theme-purple text-2xl font-bold">{totalReadings}</div>
+            <div className="text-xs text-gray-600">Lectures totales</div>
+          </div>
+          
+          <div className="glass-card rounded-2xl p-3 text-center">
+            <div className="text-theme-amber text-2xl font-bold">{totalTokens}</div>
+            <div className="text-xs text-gray-600">Tokens gagnés</div>
+          </div>
+        </div>
+        
+        <Calendar 
+          completedDays={childCompletedDays}
+          recordedDays={childRecordings}
+        />
+        
+        <div className="flex space-x-3 animate-slide-in">
+          <Button 
+            variant="primary" 
+            fullWidth
+            leftIcon={<BookOpen size={18} />}
+            onClick={markTodayAsCompleted}
+          >
+            Marquer comme lu
+          </Button>
+          
+          <Button 
+            variant="secondary" 
+            fullWidth
+            leftIcon={<Mic size={18} />}
+            onClick={recordToday}
+          >
+            Enregistrer
+          </Button>
+        </div>
+        
+        <div className="glass-card rounded-2xl p-4 animate-scale-in">
+          <div className="flex items-center mb-4">
+            <Coins size={20} className="text-theme-purple mr-2" />
+            <h2 className="text-lg font-medium">Mes tokens</h2>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-3">
+            {tokens.map((token) => (
+              <Token key={token.id} token={token} />
+            ))}
+          </div>
+        </div>
+        
+        <div className="glass-card rounded-2xl p-4 animate-scale-in">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Gift size={20} className="text-theme-amber mr-2" />
+              <h2 className="text-lg font-medium">Cadeaux à gagner</h2>
+            </div>
+            <div className="flex">
+              <div className="flex items-center bg-theme-amber/10 px-2 py-1 rounded-full mr-2">
+                <Coins size={16} className="text-theme-amber mr-1" />
+                <span className="font-bold text-theme-amber">{totalTokens}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/gifts')}
+                className="text-theme-purple hover:text-theme-purple/80 hover:bg-theme-purple/10"
+              >
+                <Settings size={18} />
+              </Button>
+            </div>
+          </div>
+          
+          {assignedGifts.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux assignés</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {assignedGifts.map((gift) => {
+                  const assignedChild = children.find(child => child.id === gift.assignedToChildId);
+                  return (
+                    <GiftCard 
+                      key={gift.id} 
+                      gift={gift} 
+                      userTokens={totalTokens} 
+                      childName={assignedChild?.name}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
           
-          <div className="flex flex-col md:flex-row gap-4 animate-fade-in">
-            <div className="flex-1">
-              <Card className="shadow-lg border-none bg-white/80 backdrop-blur-md h-full">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <CalendarIcon size={18} className="text-theme-blue mr-2" />
-                    Calendrier de lecture
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Calendar 
-                    completedDays={childCompletedDays}
-                    recordedDays={childRecordings}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div className="flex-1">
-              <Card className="shadow-lg border-none bg-white/80 backdrop-blur-md h-full">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium flex items-center">
-                    <BarChart3 size={18} className="text-theme-purple mr-2" />
-                    Statistiques
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 text-center shadow-sm">
-                      <div className="text-theme-blue text-2xl font-bold">{streak}</div>
-                      <div className="text-xs text-gray-600">Jours consécutifs</div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-3 text-center shadow-sm">
-                      <div className="text-theme-purple text-2xl font-bold">{totalReadings}</div>
-                      <div className="text-xs text-gray-600">Lectures totales</div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-3 text-center shadow-sm">
-                      <div className="text-theme-amber text-2xl font-bold">{totalTokens}</div>
-                      <div className="text-xs text-gray-600">Tokens gagnés</div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-3 text-center shadow-sm">
-                      <div className="text-theme-teal text-2xl font-bold">{totalRecordings}</div>
-                      <div className="text-xs text-gray-600">Enregistrements</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+          <div>
+            <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux disponibles</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {unassignedGifts.map((gift) => (
+                <GiftCard 
+                  key={gift.id} 
+                  gift={gift} 
+                  userTokens={totalTokens}
+                  childName={selectedChild?.name}
+                />
+              ))}
             </div>
           </div>
-          
-          <div className="flex gap-3 animate-slide-in">
-            <Button 
-              variant="primary" 
-              fullWidth
-              leftIcon={<BookOpen size={18} />}
-              onClick={markTodayAsCompleted}
-              className="shadow-md hover:shadow-lg transition-all"
-            >
-              Marquer comme lu
-            </Button>
-            
-            <Button 
-              variant="secondary" 
-              fullWidth
-              leftIcon={<Mic size={18} />}
-              onClick={recordToday}
-              className="shadow-md hover:shadow-lg transition-all"
-            >
-              Enregistrer
-            </Button>
-          </div>
-          
-          <Card className="shadow-lg border-none bg-white/80 backdrop-blur-md animate-scale-in">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium flex items-center">
-                <Coins size={18} className="text-theme-purple mr-2" />
-                Mes tokens
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-3">
-                {tokens.map((token) => (
-                  <Token key={token.id} token={token} />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="shadow-lg border-none bg-white/80 backdrop-blur-md animate-scale-in">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <Gift size={18} className="text-theme-amber mr-2" />
-                  Cadeaux à gagner
-                </CardTitle>
-                <div className="flex">
-                  <div className="flex items-center bg-theme-amber/20 px-2 py-1 rounded-full mr-2">
-                    <Coins size={16} className="text-theme-amber mr-1" />
-                    <span className="font-bold text-theme-amber">{totalTokens}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/gifts')}
-                    className="text-theme-purple hover:text-theme-purple/80 hover:bg-theme-purple/10"
-                  >
-                    <Settings size={18} />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {assignedGifts.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux assignés</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {assignedGifts.map((gift) => {
-                      const assignedChild = children.find(child => child.id === gift.assignedToChildId);
-                      return (
-                        <GiftCard 
-                          key={gift.id} 
-                          gift={gift} 
-                          userTokens={totalTokens} 
-                          childName={assignedChild?.name}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              
-              <div>
-                <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux disponibles</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {unassignedGifts.map((gift) => (
-                    <GiftCard 
-                      key={gift.id} 
-                      gift={gift} 
-                      userTokens={totalTokens}
-                      childName={selectedChild?.name}
-                    />
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
