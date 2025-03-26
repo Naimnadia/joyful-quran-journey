@@ -103,7 +103,7 @@ const ProfileSelect = () => {
   }, [children, completedDays, recordings, navigate, monthStart, monthEnd]);
 
   const handleProfileSelect = (childId: string) => {
-    navigate(`/?childId=${childId}`);
+    navigate(`/home?childId=${childId}`);
   };
 
   const handleAddProfile = () => {
@@ -254,7 +254,10 @@ const ProfileSelect = () => {
                   
                   {/* Edit profile picture button */}
                   <button 
-                    onClick={() => handleOpenUploadDialog(child.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenUploadDialog(child.id);
+                    }}
                     className="absolute bottom-2 right-2 bg-theme-purple text-white p-1.5 rounded-full shadow-md hover:bg-theme-purple/90 transition-colors z-10"
                     title="Modifier la photo de profil"
                   >

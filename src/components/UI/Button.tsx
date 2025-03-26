@@ -1,11 +1,16 @@
 
-import React from 'react';
-import { cn } from '@/lib/utils';
+// This file redirects to the main button component
+// It maintains backward compatibility with existing imports
 
+import { Button as ShadcnButton } from "@/components/ui/button";
+import React from 'react';
+
+// Create a wrapper component that mimics the custom Button component's props
+// but uses the shadcn Button internally
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -15,49 +20,23 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = ({
   children,
   className,
-  variant = 'primary',
-  size = 'md',
+  variant = 'default',
+  size = 'default',
   isLoading = false,
   leftIcon,
   rightIcon,
   fullWidth = false,
   ...props
 }: ButtonProps) => {
-  // Base classes
-  const baseClasses = "rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 inline-flex items-center justify-center";
-  
-  // Variant classes
-  const variantClasses = {
-    primary: "bg-theme-blue text-white hover:bg-theme-blue-light focus:ring-theme-blue",
-    secondary: "bg-theme-purple text-white hover:bg-theme-purple-light focus:ring-theme-purple",
-    outline: "bg-transparent border-2 border-theme-blue text-theme-blue hover:bg-theme-blue/10 focus:ring-theme-blue",
-    ghost: "bg-transparent text-theme-blue hover:bg-theme-blue/10 focus:ring-theme-blue",
-  };
-  
-  // Size classes
-  const sizeClasses = {
-    sm: "text-sm px-3 py-1.5",
-    md: "text-base px-4 py-2",
-    lg: "text-lg px-6 py-3",
-  };
-  
-  // Loading state
-  const loadingClasses = isLoading ? "opacity-80 cursor-not-allowed" : "";
-  
-  // Full width
-  const widthClasses = fullWidth ? "w-full" : "";
+  // Create className based on fullWidth
+  const widthClass = fullWidth ? "w-full" : "";
   
   return (
-    <button
-      className={cn(
-        baseClasses,
-        variantClasses[variant],
-        sizeClasses[size],
-        loadingClasses,
-        widthClasses,
-        className
-      )}
+    <ShadcnButton
+      className={`${widthClass} ${className || ''} inline-flex items-center justify-center gap-2`}
       disabled={isLoading || props.disabled}
+      variant={variant}
+      size={size}
       {...props}
     >
       {isLoading && (
@@ -66,11 +45,12 @@ const Button = ({
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
       )}
-      {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
+      {!isLoading && leftIcon && <span>{leftIcon}</span>}
       {children}
-      {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
-    </button>
+      {!isLoading && rightIcon && <span>{rightIcon}</span>}
+    </ShadcnButton>
   );
 };
 
+export { Button };
 export default Button;

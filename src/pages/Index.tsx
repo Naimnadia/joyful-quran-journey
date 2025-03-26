@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
@@ -355,20 +356,20 @@ const Index = () => {
         
         <div className="flex space-x-3 animate-slide-in">
           <Button 
-            variant="primary" 
-            fullWidth
-            leftIcon={<BookOpen size={18} />}
+            variant="default" 
+            className="w-full"
             onClick={markTodayAsCompleted}
           >
+            <BookOpen size={18} className="mr-2" />
             Marquer comme lu
           </Button>
           
           <Button 
             variant="secondary" 
-            fullWidth
-            leftIcon={<Mic size={18} />}
+            className="w-full"
             onClick={recordToday}
           >
+            <Mic size={18} className="mr-2" />
             Enregistrer
           </Button>
         </div>
