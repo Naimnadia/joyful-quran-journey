@@ -32,36 +32,7 @@ const Index = () => {
     }
   }, [childIdFromURL, navigate]);
   
-  const [gifts, setGifts] = useLocalStorage<GiftType[]>('gifts', [
-    {
-      id: 'gift-1',
-      name: 'Livre islamique',
-      description: 'Un livre adapté à l\'âge de l\'enfant sur l\'Islam',
-      tokenCost: 15,
-      imageSrc: 'https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=500&auto=format'
-    },
-    {
-      id: 'gift-2',
-      name: 'Sortie familiale',
-      description: 'Une sortie au parc ou au musée de votre choix',
-      tokenCost: 25,
-      imageSrc: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=500&auto=format'
-    },
-    {
-      id: 'gift-3',
-      name: 'Jeu éducatif',
-      description: 'Un jeu de société sur les valeurs islamiques',
-      tokenCost: 35,
-      imageSrc: 'https://images.unsplash.com/photo-1632501641765-e568d28b0015?q=80&w=500&auto=format'
-    },
-    {
-      id: 'gift-4',
-      name: 'Cadeau surprise',
-      description: 'Un cadeau spécial pour récompenser les efforts',
-      tokenCost: 50,
-      imageSrc: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=500&auto=format'
-    }
-  ]);
+  const [gifts, setGifts] = useLocalStorage<GiftType[]>('gifts', []);
   
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   
@@ -408,38 +379,50 @@ const Index = () => {
             </div>
           </div>
           
-          {assignedGifts.length > 0 && (
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux assignés</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {assignedGifts.map((gift) => {
-                  const assignedChild = children.find(child => child.id === gift.assignedToChildId);
-                  return (
-                    <GiftCard 
-                      key={gift.id} 
-                      gift={gift} 
-                      userTokens={totalTokens} 
-                      childName={assignedChild?.name}
-                    />
-                  );
-                })}
-              </div>
+          {gifts.length > 0 ? (
+            <>
+              {assignedGifts.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux assignés</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {assignedGifts.map((gift) => {
+                      const assignedChild = children.find(child => child.id === gift.assignedToChildId);
+                      return (
+                        <GiftCard 
+                          key={gift.id} 
+                          gift={gift} 
+                          userTokens={totalTokens} 
+                          childName={assignedChild?.name}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {unassignedGifts.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux disponibles</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {unassignedGifts.map((gift) => (
+                      <GiftCard 
+                        key={gift.id} 
+                        gift={gift} 
+                        userTokens={totalTokens}
+                        childName={selectedChild?.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-6 text-gray-500">
+              <Gift size={24} className="mx-auto mb-2 text-gray-400" />
+              <p>Aucun cadeau disponible</p>
+              <p className="text-sm">Ajoutez des cadeaux dans les paramètres</p>
             </div>
           )}
-          
-          <div>
-            <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux disponibles</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {unassignedGifts.map((gift) => (
-                <GiftCard 
-                  key={gift.id} 
-                  gift={gift} 
-                  userTokens={totalTokens}
-                  childName={selectedChild?.name}
-                />
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>
