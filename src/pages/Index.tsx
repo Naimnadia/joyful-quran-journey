@@ -2,14 +2,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
-import { Mic, Award, BookOpen, Star, User, ChevronDown } from 'lucide-react';
+import { Mic, Coins, BookOpen, Star, User, ChevronDown } from 'lucide-react';
 import Header from '@/components/Header';
 import Calendar from '@/components/Calendar';
-import Badge from '@/components/Badge';
+import Token from '@/components/Token';
 import Button from '@/components/UI/Button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { toast } from 'sonner';
-import { Child, CompletedDay, Recording, BadgeType } from '@/types';
+import { Child, CompletedDay, Recording, TokenType } from '@/types';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -91,54 +91,53 @@ const Index = () => {
     );
   }
   
-  const [badges, setBadges] = useLocalStorage<BadgeType[]>('badges', [
+  const [tokens, setTokens] = useLocalStorage<TokenType[]>('tokens', [
     {
-      id: 'streak-3',
-      title: '3 jours de lecture',
-      icon: 'zap',
-      description: 'Lire le Coran 3 jours de suite',
-      unlocked: false
+      id: 'token-10',
+      title: '10 tokens',
+      icon: 'coins',
+      description: 'Gagner 10 tokens',
+      unlocked: false,
+      value: 10
     },
     {
-      id: 'streak-7',
-      title: '7 jours de lecture',
-      icon: 'star',
-      description: 'Lire le Coran pendant une semaine complète',
-      unlocked: false
+      id: 'token-20',
+      title: '20 tokens',
+      icon: 'coins',
+      description: 'Gagner 20 tokens',
+      unlocked: false,
+      value: 20
     },
     {
-      id: 'streak-30',
-      title: '30 jours de lecture',
-      icon: 'award',
-      description: 'Lire le Coran tous les jours pendant un mois',
-      unlocked: false
+      id: 'token-30',
+      title: '30 tokens',
+      icon: 'coins',
+      description: 'Gagner 30 tokens',
+      unlocked: false,
+      value: 30
     },
     {
-      id: 'recordings-5',
-      title: '5 enregistrements',
-      icon: 'mic',
-      description: 'Enregistrer sa lecture 5 fois',
-      unlocked: false
+      id: 'token-40',
+      title: '40 tokens',
+      icon: 'coins',
+      description: 'Gagner 40 tokens',
+      unlocked: false,
+      value: 40
     },
     {
-      id: 'recordings-10',
-      title: '10 enregistrements',
-      icon: 'mic',
-      description: 'Enregistrer sa lecture 10 fois',
-      unlocked: false
-    },
-    {
-      id: 'perfect-week',
-      title: 'Semaine parfaite',
-      icon: 'book',
-      description: 'Lire et enregistrer chaque jour pendant une semaine',
-      unlocked: false
+      id: 'token-50',
+      title: '50 tokens',
+      icon: 'coins',
+      description: 'Gagner 50 tokens',
+      unlocked: false,
+      value: 50
     }
   ]);
 
   const [streak, setStreak] = useState(0);
   const [totalReadings, setTotalReadings] = useState(0);
   const [totalRecordings, setTotalRecordings] = useState(0);
+  const [totalTokens, setTotalTokens] = useState(0);
   
   const childCompletedDays = completedDays
     .filter(day => day.childId === selectedChildId)
@@ -158,6 +157,7 @@ const Index = () => {
       return new Date(b).getTime() - new Date(a).getTime();
     });
     
+    // Calculate current streak
     let currentStreak = 0;
     
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -179,40 +179,44 @@ const Index = () => {
     
     setStreak(currentStreak);
     
-    const updatedBadges = [...badges];
+    // Calculate total tokens based on activities
+    // 1 token per reading, 2 tokens per recording, 5 bonus tokens for perfect week
+    const readingTokens = childCompletedDays.length * 1;
+    const recordingTokens = childRecordings.length * 2;
     
-    // Update streak badges
-    if (currentStreak >= 3) {
-      updatedBadges.find(b => b.id === 'streak-3')!.unlocked = true;
-    }
-    
-    if (currentStreak >= 7) {
-      updatedBadges.find(b => b.id === 'streak-7')!.unlocked = true;
-    }
-    
-    if (currentStreak >= 30) {
-      updatedBadges.find(b => b.id === 'streak-30')!.unlocked = true;
-    }
-    
-    // Update recording badges
-    if (childRecordings.length >= 5) {
-      updatedBadges.find(b => b.id === 'recordings-5')!.unlocked = true;
-    }
-    
-    if (childRecordings.length >= 10) {
-      updatedBadges.find(b => b.id === 'recordings-10')!.unlocked = true;
-    }
-    
-    // Check for perfect week
     const hasCompletedPerfectWeek = checkForPerfectWeek(childCompletedDays, childRecordings);
-    if (hasCompletedPerfectWeek) {
-      updatedBadges.find(b => b.id === 'perfect-week')!.unlocked = true;
+    const perfectWeekBonus = hasCompletedPerfectWeek ? 5 : 0;
+    
+    const calculatedTotalTokens = readingTokens + recordingTokens + perfectWeekBonus;
+    setTotalTokens(calculatedTotalTokens);
+    
+    // Update unlocked tokens based on total tokens
+    const updatedTokens = [...tokens];
+    
+    if (calculatedTotalTokens >= 10) {
+      updatedTokens.find(t => t.id === 'token-10')!.unlocked = true;
     }
     
-    if (JSON.stringify(updatedBadges) !== JSON.stringify(badges)) {
-      setBadges(updatedBadges);
+    if (calculatedTotalTokens >= 20) {
+      updatedTokens.find(t => t.id === 'token-20')!.unlocked = true;
     }
-  }, [childCompletedDays, childRecordings, badges, setBadges, selectedChildId]);
+    
+    if (calculatedTotalTokens >= 30) {
+      updatedTokens.find(t => t.id === 'token-30')!.unlocked = true;
+    }
+    
+    if (calculatedTotalTokens >= 40) {
+      updatedTokens.find(t => t.id === 'token-40')!.unlocked = true;
+    }
+    
+    if (calculatedTotalTokens >= 50) {
+      updatedTokens.find(t => t.id === 'token-50')!.unlocked = true;
+    }
+    
+    if (JSON.stringify(updatedTokens) !== JSON.stringify(tokens)) {
+      setTokens(updatedTokens);
+    }
+  }, [childCompletedDays, childRecordings, tokens, setTokens, selectedChildId]);
   
   const checkForPerfectWeek = (completedDays: string[], recordings: string[]): boolean => {
     // Get current week's date range
@@ -276,7 +280,7 @@ const Index = () => {
   };
   
   const selectedChild = children.find(child => child.id === selectedChildId);
-  const unlockedBadgesCount = badges.filter(b => b.unlocked).length;
+  const unlockedTokensCount = tokens.filter(t => t.unlocked).length;
   
   return (
     <div className="min-h-screen pt-24 pb-10 px-4 bg-gradient-to-b from-blue-50 to-purple-50">
@@ -316,8 +320,8 @@ const Index = () => {
           </div>
           
           <div className="glass-card rounded-2xl p-3 text-center">
-            <div className="text-theme-amber text-2xl font-bold">{unlockedBadgesCount}/{badges.length}</div>
-            <div className="text-xs text-gray-600">Badges débloqués</div>
+            <div className="text-theme-amber text-2xl font-bold">{totalTokens}</div>
+            <div className="text-xs text-gray-600">Tokens gagnés</div>
           </div>
         </div>
         
@@ -348,13 +352,13 @@ const Index = () => {
         
         <div className="glass-card rounded-2xl p-4 animate-scale-in">
           <div className="flex items-center mb-4">
-            <Award size={20} className="text-theme-purple mr-2" />
-            <h2 className="text-lg font-medium">Mes badges</h2>
+            <Coins size={20} className="text-theme-purple mr-2" />
+            <h2 className="text-lg font-medium">Mes tokens</h2>
           </div>
           
           <div className="grid grid-cols-3 gap-3">
-            {badges.map((badge) => (
-              <Badge key={badge.id} badge={badge} />
+            {tokens.map((token) => (
+              <Token key={token.id} token={token} />
             ))}
           </div>
         </div>

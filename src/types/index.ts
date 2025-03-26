@@ -12,12 +12,13 @@ export interface Recording {
   childId?: string; // Link recordings to children
 }
 
-export interface BadgeType {
+export interface TokenType {
   id: string;
   title: string;
   icon: string;
   description: string;
   unlocked: boolean;
+  value: number;
 }
 
 export type CompletedDay = {
