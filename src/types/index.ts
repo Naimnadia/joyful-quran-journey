@@ -25,3 +25,11 @@ export type CompletedDay = {
   date: string;
   childId: string;
 };
+
+export interface Gift {
+  id: string;
+  name: string;
+  description: string;
+  tokenCost: number;
+  imageSrc?: string;
+}

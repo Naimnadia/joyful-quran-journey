@@ -2,14 +2,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
-import { Mic, Coins, BookOpen, Star, User, ChevronDown } from 'lucide-react';
+import { Mic, Coins, BookOpen, Star, User, ChevronDown, Gift } from 'lucide-react';
 import Header from '@/components/Header';
 import Calendar from '@/components/Calendar';
 import Token from '@/components/Token';
+import GiftCard from '@/components/GiftCard';
 import Button from '@/components/UI/Button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { toast } from 'sonner';
-import { Child, CompletedDay, Recording, TokenType } from '@/types';
+import { Child, CompletedDay, Recording, TokenType, Gift as GiftType } from '@/types';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -25,6 +26,38 @@ const Index = () => {
   const [recordings, setRecordings] = useLocalStorage<Recording[]>('recordingsV2', []);
   const [oldCompletedDays, setOldCompletedDays] = useLocalStorage<string[]>('completedDays', []);
   const [oldRecordings, setOldRecordings] = useLocalStorage<{ date: string, audioUrl: string }[]>('recordings', []);
+  
+  // Add the gifts data
+  const [gifts, setGifts] = useLocalStorage<GiftType[]>('gifts', [
+    {
+      id: 'gift-1',
+      name: 'Livre islamique',
+      description: 'Un livre adapté à l\'âge de l\'enfant sur l\'Islam',
+      tokenCost: 15,
+      imageSrc: 'https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=500&auto=format'
+    },
+    {
+      id: 'gift-2',
+      name: 'Sortie familiale',
+      description: 'Une sortie au parc ou au musée de votre choix',
+      tokenCost: 25,
+      imageSrc: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?q=80&w=500&auto=format'
+    },
+    {
+      id: 'gift-3',
+      name: 'Jeu éducatif',
+      description: 'Un jeu de société sur les valeurs islamiques',
+      tokenCost: 35,
+      imageSrc: 'https://images.unsplash.com/photo-1632501641765-e568d28b0015?q=80&w=500&auto=format'
+    },
+    {
+      id: 'gift-4',
+      name: 'Cadeau surprise',
+      description: 'Un cadeau spécial pour récompenser les efforts',
+      tokenCost: 50,
+      imageSrc: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=500&auto=format'
+    }
+  ]);
   
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   
@@ -359,6 +392,26 @@ const Index = () => {
           <div className="grid grid-cols-3 gap-3">
             {tokens.map((token) => (
               <Token key={token.id} token={token} />
+            ))}
+          </div>
+        </div>
+        
+        {/* Add the gifts section */}
+        <div className="glass-card rounded-2xl p-4 animate-scale-in">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Gift size={20} className="text-theme-amber mr-2" />
+              <h2 className="text-lg font-medium">Cadeaux à gagner</h2>
+            </div>
+            <div className="flex items-center bg-theme-amber/10 px-2 py-1 rounded-full">
+              <Coins size={16} className="text-theme-amber mr-1" />
+              <span className="font-bold text-theme-amber">{totalTokens}</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            {gifts.map((gift) => (
+              <GiftCard key={gift.id} gift={gift} userTokens={totalTokens} />
             ))}
           </div>
         </div>
