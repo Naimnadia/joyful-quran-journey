@@ -31,21 +31,6 @@ const Button = ({
   fullWidth = false,
   ...props
 }: ButtonProps) => {
-  // Map our custom variant names to shadcn variants
-  const variantMap = {
-    primary: "default",
-    secondary: "secondary",
-    outline: "outline",
-    ghost: "ghost"
-  };
-  
-  // Map our custom sizes to shadcn sizes
-  const sizeMap = {
-    sm: "sm",
-    md: "default",
-    lg: "lg"
-  };
-
   // Base classes
   const baseClasses = "rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2";
   

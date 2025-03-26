@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
-import { Mic, Coins, BookOpen, Star, User, ChevronDown, Gift, Settings } from 'lucide-react';
+import { Mic, Coins, BookOpen, Star, User, ChevronDown, Gift, Settings, ArrowLeft } from 'lucide-react';
 import Header from '@/components/Header';
 import Calendar from '@/components/Calendar';
 import Token from '@/components/Token';
 import GiftCard from '@/components/GiftCard';
-import Button from '@/components/UI/Button';
+import { Button } from '@/components/ui/button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { toast } from 'sonner';
 import { Child, CompletedDay, Recording, TokenType, Gift as GiftType } from '@/types';
@@ -25,6 +25,12 @@ const Index = () => {
   const [recordings, setRecordings] = useLocalStorage<Recording[]>('recordingsV2', []);
   const [oldCompletedDays, setOldCompletedDays] = useLocalStorage<string[]>('completedDays', []);
   const [oldRecordings, setOldRecordings] = useLocalStorage<{ date: string, audioUrl: string }[]>('recordings', []);
+  
+  useEffect(() => {
+    if (!childIdFromURL) {
+      navigate('/');
+    }
+  }, [childIdFromURL, navigate]);
   
   const [gifts, setGifts] = useLocalStorage<GiftType[]>('gifts', [
     {
@@ -90,36 +96,18 @@ const Index = () => {
       if (childExists) {
         setSelectedChildId(childIdFromURL);
       } else if (children.length > 0) {
-        setSelectedChildId(children[0].id);
+        navigate('/');
       }
     } else if (children.length > 0 && !selectedChildId) {
       setSelectedChildId(children[0].id);
     }
-  }, [childIdFromURL, children, selectedChildId]);
+  }, [childIdFromURL, children, selectedChildId, navigate]);
   
   if (children.length === 0) {
-    return (
-      <div className="min-h-screen pt-24 pb-10 px-4 bg-gradient-to-b from-blue-50 to-purple-50">
-        <Header />
-        
-        <div className="container max-w-md mx-auto space-y-6">
-          <div className="glass-card rounded-2xl p-6 text-center animate-fade-in">
-            <User size={48} className="text-theme-purple mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">Bienvenue sur Daily Coran</h2>
-            <p className="text-gray-600 mb-6">
-              Pour commencer, ajoutez un enfant pour suivre sa progression quotidienne de lecture du Coran.
-            </p>
-            <Button
-              variant="primary"
-              fullWidth
-              onClick={() => navigate('/children')}
-            >
-              Ajouter un enfant
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
+    useEffect(() => {
+      navigate('/');
+    }, [navigate]);
+    return null;
   }
   
   const [tokens, setTokens] = useLocalStorage<TokenType[]>('tokens', [
@@ -301,8 +289,11 @@ const Index = () => {
     navigate(`/record/${today}?childId=${selectedChildId}`);
   };
   
+  const handleSwitchProfile = () => {
+    navigate('/');
+  };
+  
   const selectedChild = children.find(child => child.id === selectedChildId);
-  const unlockedTokensCount = tokens.filter(t => t.unlocked).length;
   
   const assignGiftToChild = (giftId: string, childId: string) => {
     setGifts(prev => prev.map(gift => 
@@ -321,26 +312,24 @@ const Index = () => {
       <Header />
       
       <div className="container max-w-md mx-auto space-y-6">
-        {children.length > 1 && (
-          <div className="flex justify-center animate-fade-in">
-            <div className="glass-card rounded-full px-4 py-2 inline-flex items-center">
-              <User size={16} className="text-theme-purple mr-2" />
-              <select
-                value={selectedChildId || ''}
-                onChange={(e) => {
-                  setSelectedChildId(e.target.value);
-                  navigate(`/?childId=${e.target.value}`);
-                }}
-                className="bg-transparent border-none text-theme-purple font-medium focus:outline-none"
-              >
-                {children.map(child => (
-                  <option key={child.id} value={child.id}>{child.name}</option>
-                ))}
-              </select>
-              <ChevronDown size={16} className="text-theme-purple ml-1" />
-            </div>
+        <div className="flex justify-between items-center animate-fade-in">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-gray-300 text-gray-600 hover:bg-gray-100"
+            onClick={handleSwitchProfile}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Changer de profil
+          </Button>
+          
+          <div className="glass-card rounded-full px-4 py-2 inline-flex items-center">
+            <User size={16} className="text-theme-purple mr-2" />
+            <span className="text-theme-purple font-medium">
+              {selectedChild?.name || 'Profil'}
+            </span>
           </div>
-        )}
+        </div>
         
         <div className="grid grid-cols-3 gap-3 animate-fade-in">
           <div className="glass-card rounded-2xl p-3 text-center">
