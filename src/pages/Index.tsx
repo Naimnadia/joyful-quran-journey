@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
-import { Mic, Coins, BookOpen, Star, User, ChevronDown, Gift } from 'lucide-react';
+import { Mic, Coins, BookOpen, Star, User, ChevronDown, Gift, Settings } from 'lucide-react';
 import Header from '@/components/Header';
 import Calendar from '@/components/Calendar';
 import Token from '@/components/Token';
@@ -403,9 +403,19 @@ const Index = () => {
               <Gift size={20} className="text-theme-amber mr-2" />
               <h2 className="text-lg font-medium">Cadeaux à gagner</h2>
             </div>
-            <div className="flex items-center bg-theme-amber/10 px-2 py-1 rounded-full">
-              <Coins size={16} className="text-theme-amber mr-1" />
-              <span className="font-bold text-theme-amber">{totalTokens}</span>
+            <div className="flex">
+              <div className="flex items-center bg-theme-amber/10 px-2 py-1 rounded-full mr-2">
+                <Coins size={16} className="text-theme-amber mr-1" />
+                <span className="font-bold text-theme-amber">{totalTokens}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/gifts')}
+                className="text-theme-purple hover:text-theme-purple/80 hover:bg-theme-purple/10"
+              >
+                <Settings size={18} />
+              </Button>
             </div>
           </div>
           
