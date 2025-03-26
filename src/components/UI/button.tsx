@@ -31,27 +31,30 @@ const Button = ({
   fullWidth = false,
   ...props
 }: ButtonProps) => {
-  // Base classes
-  const baseClasses = "rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2";
-  
-  // Variant classes for custom styling
-  const variantClasses = {
-    primary: "bg-theme-blue text-white hover:bg-theme-blue-light focus:ring-theme-blue",
-    secondary: "bg-theme-purple text-white hover:bg-theme-purple-light focus:ring-theme-purple",
-    outline: "bg-transparent border-2 border-theme-blue text-theme-blue hover:bg-theme-blue/10 focus:ring-theme-blue",
-    ghost: "bg-transparent text-theme-blue hover:bg-theme-blue/10 focus:ring-theme-blue",
+  // Map our custom variants to shadcn variants
+  const variantMapping: Record<string, any> = {
+    primary: "default",
+    secondary: "secondary",
+    outline: "outline",
+    ghost: "ghost"
+  };
+
+  // Map our custom sizes to shadcn sizes
+  const sizeMapping: Record<string, any> = {
+    sm: "sm",
+    md: "default",
+    lg: "lg"
   };
   
-  // Loading state
-  const loadingClasses = isLoading ? "opacity-80 cursor-not-allowed" : "";
-  
-  // Full width
-  const widthClasses = fullWidth ? "w-full" : "";
+  // Create className based on fullWidth
+  const widthClass = fullWidth ? "w-full" : "";
   
   return (
-    <button
-      className={`${baseClasses} ${variantClasses[variant]} ${loadingClasses} ${widthClasses} ${className || ''} inline-flex items-center justify-center gap-2`}
+    <ShadcnButton
+      className={`${widthClass} ${className || ''} inline-flex items-center justify-center gap-2`}
       disabled={isLoading || props.disabled}
+      variant={variantMapping[variant]}
+      size={sizeMapping[size]}
       {...props}
     >
       {isLoading && (
@@ -63,7 +66,7 @@ const Button = ({
       {!isLoading && leftIcon && <span>{leftIcon}</span>}
       {children}
       {!isLoading && rightIcon && <span>{rightIcon}</span>}
-    </button>
+    </ShadcnButton>
   );
 };
 
