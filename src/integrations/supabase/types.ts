@@ -9,7 +9,144 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      children: {
+        Row: {
+          avatar: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string
+          id: string
+          name: string
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      completed_days: {
+        Row: {
+          child_id: string
+          date: string
+          id: string
+        }
+        Insert: {
+          child_id: string
+          date: string
+          id?: string
+        }
+        Update: {
+          child_id?: string
+          date?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completed_days_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gifts: {
+        Row: {
+          assigned_to_child_id: string | null
+          description: string
+          id: string
+          image_src: string | null
+          name: string
+          token_cost: number
+        }
+        Insert: {
+          assigned_to_child_id?: string | null
+          description: string
+          id?: string
+          image_src?: string | null
+          name: string
+          token_cost: number
+        }
+        Update: {
+          assigned_to_child_id?: string | null
+          description?: string
+          id?: string
+          image_src?: string | null
+          name?: string
+          token_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gifts_assigned_to_child_id_fkey"
+            columns: ["assigned_to_child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recordings: {
+        Row: {
+          audio_url: string
+          child_id: string | null
+          date: string
+          id: string
+        }
+        Insert: {
+          audio_url: string
+          child_id?: string | null
+          date: string
+          id?: string
+        }
+        Update: {
+          audio_url?: string
+          child_id?: string | null
+          date?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recordings_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tokens: {
+        Row: {
+          description: string
+          icon: string
+          id: string
+          title: string
+          unlocked: boolean
+          value: number
+        }
+        Insert: {
+          description: string
+          icon: string
+          id: string
+          title: string
+          unlocked?: boolean
+          value: number
+        }
+        Update: {
+          description?: string
+          icon?: string
+          id?: string
+          title?: string
+          unlocked?: boolean
+          value?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Child, CompletedDay, Recording, TokenType, Gift } from '@/types';
 import { fetchData, saveData, syncData } from '@/lib/supabase';
@@ -111,7 +110,7 @@ const loadStateFromLocalStorage = async () => {
       }
     }
   } catch (error) {
-    console.warn('Error loading global state:', error);
+    console.error('Error loading global state:', error);
     toast.error('Error syncing data with server. Some data may be outdated.');
   }
 };

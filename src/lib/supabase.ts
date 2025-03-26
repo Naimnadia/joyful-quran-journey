@@ -15,7 +15,7 @@ export interface Tables {
 export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
   try {
     const { data, error } = await supabase
-      .from(table)
+      .from(table as string)
       .select('*');
     
     if (error) throw error;
@@ -30,7 +30,7 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
   try {
     // Remove all existing data (simplified approach)
     const { error: deleteError } = await supabase
-      .from(table)
+      .from(table as string)
       .delete()
       .not('id', 'is', null);
     
@@ -39,8 +39,8 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
     // Insert new data
     if (data.length > 0) {
       const { error: insertError } = await supabase
-        .from(table)
-        .insert(data);
+        .from(table as string)
+        .insert(data as any[]);
       
       if (insertError) throw insertError;
     }
