@@ -8,8 +8,8 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   // Use local state as a fallback for the global state
   const [localValue, setLocalValue] = useState<T>(() => {
     // Get the value from global state first if available
-    if (state && key in state) {
-      return (state as any)[key] as T;
+    if (state && state[key as keyof typeof state] !== undefined) {
+      return state[key as keyof typeof state] as unknown as T;
     }
     
     // Otherwise try to get from localStorage
@@ -26,7 +26,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     return initialValue;
   });
   
-  // Update function that will update both local state and global state
+  // Update function that will update both local state and localStorage
   const setValue = (value: T | ((val: T) => T)) => {
     try {
       // Allow value to be a function for state updates

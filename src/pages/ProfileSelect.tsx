@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserPlus, Trash2, Award, ChevronRight } from 'lucide-react';
@@ -20,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { syncData } from '@/lib/supabase';
 
 const ProfileSelect = () => {
@@ -242,12 +242,12 @@ const ProfileSelect = () => {
           </div>
           
           <div className="flex items-center space-x-2">
-            <input
+            <Input
               type="text"
               value={newChildName}
               onChange={(e) => setNewChildName(e.target.value)}
               placeholder="Nom de l'enfant"
-              className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-purple"
+              className="flex-1 focus:ring-theme-purple"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleAddChild();
@@ -257,7 +257,7 @@ const ProfileSelect = () => {
             <Button
               variant="default"
               onClick={handleAddChild}
-              className="flex items-center"
+              className="bg-theme-blue hover:bg-theme-blue-light whitespace-nowrap"
             >
               <UserPlus size={18} className="mr-2" />
               Ajouter
@@ -269,6 +269,7 @@ const ProfileSelect = () => {
           <Button
             variant="outline"
             onClick={() => navigate('/dashboard')}
+            className="min-w-[160px]"
           >
             Tableau de bord
           </Button>
