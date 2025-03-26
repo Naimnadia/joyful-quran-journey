@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { format, parseISO, isValid } from 'date-fns';
@@ -92,8 +91,8 @@ const Record = () => {
               Pour enregistrer une lecture, vous devez d'abord ajouter un enfant.
             </p>
             <Button
-              variant="primary"
-              fullWidth
+              variant="default"
+              className="w-full"
               onClick={() => navigate('/children')}
             >
               Ajouter un enfant

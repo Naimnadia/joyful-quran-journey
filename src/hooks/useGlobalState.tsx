@@ -8,6 +8,7 @@ const globalState: {
   recordings: Recording[];
   tokens: TokenType[];
   gifts: Gift[];
+  [key: string]: any; // Allow additional keys
 } = {
   children: [],
   completedDays: [],
@@ -66,16 +67,46 @@ const listeners: { [key: string]: Set<(data: any) => void> } = {
   gifts: new Set()
 };
 
+// Load saved state from localStorage on app initialization
+const loadStateFromLocalStorage = () => {
+  try {
+    if (typeof window !== 'undefined') {
+      Object.keys(globalState).forEach(key => {
+        const storedValue = window.localStorage.getItem(`global_${key}`);
+        if (storedValue) {
+          globalState[key] = JSON.parse(storedValue);
+        }
+      });
+    }
+  } catch (error) {
+    console.warn('Error loading global state from localStorage:', error);
+  }
+};
+
+// Initialize by loading from localStorage
+loadStateFromLocalStorage();
+
+// Function to save state to localStorage
+const saveStateToLocalStorage = (key: string, value: any) => {
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`global_${key}`, JSON.stringify(value));
+    }
+  } catch (error) {
+    console.warn(`Error saving global state for key "${key}":`, error);
+  }
+};
+
 export function useGlobalState<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   // Initialize state from global state or initial value
   const [state, setState] = useState<T>(() => {
     // If the key exists in global state, use that
     if (key in globalState) {
-      return globalState[key as keyof typeof globalState] as unknown as T;
+      return globalState[key] as unknown as T;
     }
     
     // Otherwise use the initial value
-    globalState[key as keyof typeof globalState] = initialValue as any;
+    globalState[key] = initialValue as any;
     return initialValue;
   });
 
@@ -104,7 +135,10 @@ export function useGlobalState<T>(key: string, initialValue: T): [T, (value: T |
     const valueToStore = value instanceof Function ? value(state) : value;
     
     // Update global state
-    globalState[key as keyof typeof globalState] = valueToStore as any;
+    globalState[key] = valueToStore as any;
+    
+    // Save to localStorage
+    saveStateToLocalStorage(key, valueToStore);
     
     // Notify all listeners
     if (listeners[key]) {
@@ -120,26 +154,12 @@ export function useGlobalState<T>(key: string, initialValue: T): [T, (value: T |
 
 // This function allows easy initialization from localStorage for migration purposes
 export function initializeFromLocalStorage() {
-  // Only run in browser
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  try {
-    // For each key in global state, try to load from localStorage
-    Object.keys(globalState).forEach(key => {
-      const storedValue = window.localStorage.getItem(key);
-      if (storedValue) {
-        const parsedValue = JSON.parse(storedValue);
-        globalState[key as keyof typeof globalState] = parsedValue;
-        
-        // Notify listeners
-        if (listeners[key]) {
-          listeners[key].forEach(listener => listener(parsedValue));
-        }
-      }
-    });
-  } catch (error) {
-    console.warn('Error loading data from localStorage:', error);
-  }
+  loadStateFromLocalStorage();
+  
+  // Notify all listeners
+  Object.keys(globalState).forEach(key => {
+    if (listeners[key]) {
+      listeners[key].forEach(listener => listener(globalState[key]));
+    }
+  });
 }

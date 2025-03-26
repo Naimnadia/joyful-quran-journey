@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserPlus, Trash2, Award, ChevronRight } from 'lucide-react';
@@ -29,12 +28,10 @@ const Children = () => {
   const [recordings, setRecordings] = useLocalStorage<Recording[]>('recordingsV2', []);
   const [newChildName, setNewChildName] = useState('');
   
-  // Find best performer for the current month
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   
   const getPerformanceScore = (childId: string) => {
-    // Count completed days for this child in the current month
     return completedDays.filter(day => {
       const date = new Date(day.date);
       return day.childId === childId && 
@@ -43,7 +40,6 @@ const Children = () => {
     }).length;
   };
   
-  // Calculate the best performer
   const getBestPerformer = () => {
     if (children.length === 0) return null;
     
@@ -58,7 +54,6 @@ const Children = () => {
       }
     });
     
-    // Only return a best performer if they have actually done some readings
     return highestScore > 0 ? { child: bestChild, score: highestScore } : null;
   };
   
@@ -82,13 +77,8 @@ const Children = () => {
   };
   
   const handleRemoveChild = (childId: string) => {
-    // Remove child from the list
     setChildren(children.filter(child => child.id !== childId));
-    
-    // Remove associated completedDays
     setCompletedDays(completedDays.filter(day => day.childId !== childId));
-    
-    // Update recordings to remove childId
     const updatedRecordings = recordings.map(recording => {
       if (recording.childId === childId) {
         const { childId, ...rest } = recording;
@@ -96,18 +86,14 @@ const Children = () => {
       }
       return recording;
     });
-    
     setRecordings(updatedRecordings);
-    
     toast.success("Enfant supprimé avec succès");
   };
   
   const handleSelectChild = (childId: string) => {
-    // Navigate to the index page with the selected child's ID
     navigate(`/?childId=${childId}`);
   };
   
-  // Format month name in French
   const currentMonthName = format(new Date(), 'MMMM yyyy', { locale: fr });
   
   return (
@@ -115,7 +101,6 @@ const Children = () => {
       <Header />
       
       <div className="container max-w-md mx-auto space-y-6">
-        {/* Best performer card */}
         <div className="glass-card rounded-2xl p-4 animate-fade-in">
           <div className="flex items-center mb-3">
             <Award size={20} className="text-theme-amber mr-2" />
@@ -140,7 +125,6 @@ const Children = () => {
           )}
         </div>
         
-        {/* Children list */}
         <div className="glass-card rounded-2xl p-4 animate-fade-in">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
@@ -212,10 +196,11 @@ const Children = () => {
               className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-purple"
             />
             <Button
-              variant="primary"
-              leftIcon={<UserPlus size={18} />}
+              variant="default"
+              className="flex items-center"
               onClick={handleAddChild}
             >
+              <UserPlus size={18} className="mr-2" />
               Ajouter
             </Button>
           </div>
