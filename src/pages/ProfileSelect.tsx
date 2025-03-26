@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, UserPlus, Trash2, Award, ChevronRight } from 'lucide-react';
@@ -19,12 +20,35 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { syncData } from '@/lib/supabase';
 
 const ProfileSelect = () => {
   const navigate = useNavigate();
   const [children, setChildren] = useLocalStorage<Child[]>('children', []);
   const [completedDays, setCompletedDays] = useLocalStorage<CompletedDay[]>('completedDaysV2', []);
   const [newChildName, setNewChildName] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Sync with Supabase on component mount
+  useEffect(() => {
+    const syncWithSupabase = async () => {
+      try {
+        setIsLoading(true);
+        const syncedChildren = await syncData<Child>('children', children);
+        const syncedCompletedDays = await syncData<CompletedDay>('completed_days', completedDays);
+        
+        setChildren(syncedChildren);
+        setCompletedDays(syncedCompletedDays);
+      } catch (error) {
+        console.error('Error syncing data with Supabase:', error);
+        toast.error('Erreur de synchronisation des données');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    syncWithSupabase();
+  }, []);
   
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -57,7 +81,7 @@ const ProfileSelect = () => {
   
   const bestPerformer = getBestPerformer();
   
-  const handleAddChild = () => {
+  const handleAddChild = async () => {
     if (!newChildName.trim()) {
       toast.error("Veuillez entrer un nom");
       return;
@@ -69,15 +93,36 @@ const ProfileSelect = () => {
       createdAt: new Date().toISOString()
     };
     
-    setChildren([...children, newChild]);
+    const updatedChildren = [...children, newChild];
+    setChildren(updatedChildren);
     setNewChildName('');
-    toast.success(`${newChildName} a été ajouté avec succès`);
+    
+    try {
+      // Save to Supabase
+      await syncData<Child>('children', updatedChildren);
+      toast.success(`${newChildName} a été ajouté avec succès`);
+    } catch (error) {
+      console.error('Error saving child to Supabase:', error);
+      toast.error(`Erreur lors de l'ajout de ${newChildName}`);
+    }
   };
   
-  const handleRemoveChild = (childId: string) => {
-    setChildren(children.filter(child => child.id !== childId));
-    setCompletedDays(completedDays.filter(day => day.childId !== childId));
-    toast.success("Enfant supprimé avec succès");
+  const handleRemoveChild = async (childId: string) => {
+    const updatedChildren = children.filter(child => child.id !== childId);
+    const updatedCompletedDays = completedDays.filter(day => day.childId !== childId);
+    
+    setChildren(updatedChildren);
+    setCompletedDays(updatedCompletedDays);
+    
+    try {
+      // Save to Supabase
+      await syncData<Child>('children', updatedChildren);
+      await syncData<CompletedDay>('completed_days', updatedCompletedDays);
+      toast.success("Enfant supprimé avec succès");
+    } catch (error) {
+      console.error('Error removing child from Supabase:', error);
+      toast.error("Erreur lors de la suppression");
+    }
   };
   
   const handleSelectChild = (childId: string) => {
@@ -88,10 +133,21 @@ const ProfileSelect = () => {
   
   // Redirect to home if there's only one child
   useEffect(() => {
-    if (children.length === 1) {
+    if (!isLoading && children.length === 1) {
       navigate(`/home?childId=${children[0].id}`);
     }
-  }, [children, navigate]);
+  }, [children, navigate, isLoading]);
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-purple-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-theme-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-theme-purple font-medium">Synchronisation des données...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen p-4 bg-gradient-to-b from-blue-50 to-purple-50 flex flex-col items-center justify-center">

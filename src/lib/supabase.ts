@@ -14,8 +14,8 @@ export interface Tables {
 // Helper functions for data access
 export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
   try {
-    // Convert camelCase to snake_case for table names if needed
-    const tableName = table === 'completedDays' ? 'completed_days' : table;
+    // Convert table names if needed
+    let tableName = table;
     
     const { data, error } = await supabase
       .from(tableName)
@@ -31,8 +31,8 @@ export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
 
 export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void> {
   try {
-    // Convert camelCase to snake_case for table names if needed
-    const tableName = table === 'completedDays' ? 'completed_days' : table;
+    // Use exact table name from the Tables interface
+    let tableName = table;
     
     // Remove all existing data (simplified approach)
     const { error: deleteError } = await supabase
