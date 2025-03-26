@@ -28,7 +28,7 @@ const GiftCard = ({ gift, userTokens, childName }: GiftCardProps) => {
           )}
         >
           <span>{gift.tokenCost}</span>
-          <Coins size={14} />
+          <Coins size={8} />
         </Badge>
       </div>
       
@@ -44,7 +44,7 @@ const GiftCard = ({ gift, userTokens, childName }: GiftCardProps) => {
         </div>
       ) : (
         <div className="w-full h-24 rounded-lg bg-gray-100 flex items-center justify-center">
-          <GiftIcon size={32} className="text-gray-400" />
+          <GiftIcon size={16} className="text-gray-400" />
         </div>
       )}
 
@@ -57,7 +57,7 @@ const GiftCard = ({ gift, userTokens, childName }: GiftCardProps) => {
         
         {childName && (
           <div className="flex items-center text-xs text-theme-purple">
-            <User size={12} className="mr-1" /> 
+            <User size={8} className="mr-1" /> 
             <span>{childName}</span>
           </div>
         )}

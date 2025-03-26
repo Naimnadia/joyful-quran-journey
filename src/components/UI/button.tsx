@@ -12,8 +12,8 @@ export { buttonVariants };
 // but uses the shadcn Button internally
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'default' | 'destructive' | 'link';
+  size?: 'sm' | 'md' | 'lg' | 'default';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -36,14 +36,18 @@ const Button = ({
     primary: "default",
     secondary: "secondary",
     outline: "outline",
-    ghost: "ghost"
+    ghost: "ghost",
+    default: "default",
+    destructive: "destructive",
+    link: "link"
   };
 
   // Map our custom sizes to shadcn sizes
   const sizeMapping: Record<string, any> = {
     sm: "sm",
     md: "default",
-    lg: "lg"
+    lg: "lg",
+    default: "default"
   };
   
   // Create className based on fullWidth

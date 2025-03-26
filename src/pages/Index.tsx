@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
@@ -320,12 +319,12 @@ const Index = () => {
             className="border-gray-300 text-gray-600 hover:bg-gray-100"
             onClick={handleSwitchProfile}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-3 w-3" />
             Changer de profil
           </Button>
           
           <div className="glass-card rounded-full px-4 py-2 inline-flex items-center">
-            <User size={16} className="text-theme-purple mr-2" />
+            <User size={10} className="text-theme-purple mr-2" />
             <span className="text-theme-purple font-medium">
               {selectedChild?.name || 'Profil'}
             </span>
@@ -360,7 +359,7 @@ const Index = () => {
             className="w-full"
             onClick={markTodayAsCompleted}
           >
-            <BookOpen size={18} className="mr-2" />
+            <BookOpen size={10} className="mr-2" />
             Marquer comme lu
           </Button>
           
@@ -369,14 +368,14 @@ const Index = () => {
             className="w-full"
             onClick={recordToday}
           >
-            <Mic size={18} className="mr-2" />
+            <Mic size={10} className="mr-2" />
             Enregistrer
           </Button>
         </div>
         
         <div className="glass-card rounded-2xl p-4 animate-scale-in">
           <div className="flex items-center mb-4">
-            <Coins size={20} className="text-theme-purple mr-2" />
+            <Coins size={10} className="text-theme-purple mr-2" />
             <h2 className="text-lg font-medium">Mes tokens</h2>
           </div>
           
@@ -390,12 +389,12 @@ const Index = () => {
         <div className="glass-card rounded-2xl p-4 animate-scale-in">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <Gift size={20} className="text-theme-amber mr-2" />
+              <Gift size={10} className="text-theme-amber mr-2" />
               <h2 className="text-lg font-medium">Cadeaux à gagner</h2>
             </div>
             <div className="flex">
               <div className="flex items-center bg-theme-amber/10 px-2 py-1 rounded-full mr-2">
-                <Coins size={16} className="text-theme-amber mr-1" />
+                <Coins size={8} className="text-theme-amber mr-1" />
                 <span className="font-bold text-theme-amber">{totalTokens}</span>
               </div>
               <Button
@@ -404,7 +403,7 @@ const Index = () => {
                 onClick={() => navigate('/gifts')}
                 className="text-theme-purple hover:text-theme-purple/80 hover:bg-theme-purple/10"
               >
-                <Settings size={18} />
+                <Settings size={10} />
               </Button>
             </div>
           </div>

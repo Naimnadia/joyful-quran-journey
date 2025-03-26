@@ -27,7 +27,7 @@ const Token = ({ token }: TokenProps) => {
       title={token.description}
     >
       <div className="token-icon mb-2">
-        <IconComponent size={32} className={token.unlocked ? 'text-white' : 'text-gray-500'} />
+        <IconComponent size={16} className={token.unlocked ? 'text-white' : 'text-gray-500'} />
       </div>
       <div className="token-value text-white text-lg font-bold mb-1">
         {token.value}

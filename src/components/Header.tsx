@@ -20,7 +20,7 @@ const Header = () => {
             to="/" 
             className="flex items-center text-theme-purple hover:text-theme-purple-light transition-colors"
           >
-            <ArrowLeft className="mr-2" size={20} />
+            <ArrowLeft className="mr-2" size={12} />
             <span className="font-medium">Retour</span>
           </Link>
         )}
@@ -32,63 +32,63 @@ const Header = () => {
               className="p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
               aria-label="Home"
             >
-              <Book size={24} className="text-theme-purple" />
+              <Book size={12} className="text-theme-purple" />
             </Link>
             <Link 
               to="/record" 
               className="p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
               aria-label="Record"
             >
-              <Mic size={24} className="text-theme-purple" />
+              <Mic size={12} className="text-theme-purple" />
             </Link>
             <Link 
               to="/children" 
               className="p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
               aria-label="Children"
             >
-              <Users size={24} className="text-theme-purple" />
+              <Users size={12} className="text-theme-purple" />
             </Link>
             <Link 
               to="/dashboard" 
               className="p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
               aria-label="Dashboard"
             >
-              <BarChart3 size={24} className="text-theme-purple" />
+              <BarChart3 size={12} className="text-theme-purple" />
             </Link>
             <Link 
               to="/gifts" 
               className="p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
               aria-label="Gifts"
             >
-              <Gift size={24} className="text-theme-purple" />
+              <Gift size={12} className="text-theme-purple" />
             </Link>
           </nav>
         )}
         
         {isRecordPage && (
           <div className="flex items-center">
-            <Mic size={24} className="text-theme-purple mr-2" />
+            <Mic size={12} className="text-theme-purple mr-2" />
             <h2 className="font-medium">Enregistrer</h2>
           </div>
         )}
         
         {isChildrenPage && (
           <div className="flex items-center">
-            <Users size={24} className="text-theme-purple mr-2" />
+            <Users size={12} className="text-theme-purple mr-2" />
             <h2 className="font-medium">Gestion des enfants</h2>
           </div>
         )}
         
         {isDashboardPage && (
           <div className="flex items-center">
-            <BarChart3 size={24} className="text-theme-purple mr-2" />
+            <BarChart3 size={12} className="text-theme-purple mr-2" />
             <h2 className="font-medium">Tableau de bord</h2>
           </div>
         )}
         
         {isGiftsPage && (
           <div className="flex items-center">
-            <Gift size={24} className="text-theme-purple mr-2" />
+            <Gift size={12} className="text-theme-purple mr-2" />
             <h2 className="font-medium">Gestion des cadeaux</h2>
           </div>
         )}

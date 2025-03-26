@@ -9,7 +9,7 @@ import React from 'react';
 // but uses the shadcn Button internally
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link' | 'primary';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -28,6 +28,9 @@ const Button = ({
   fullWidth = false,
   ...props
 }: ButtonProps) => {
+  // Map 'primary' variant to 'default' for backward compatibility
+  const mappedVariant = variant === 'primary' ? 'default' : variant;
+  
   // Create className based on fullWidth
   const widthClass = fullWidth ? "w-full" : "";
   
@@ -35,7 +38,7 @@ const Button = ({
     <ShadcnButton
       className={`${widthClass} ${className || ''} inline-flex items-center justify-center gap-2`}
       disabled={isLoading || props.disabled}
-      variant={variant}
+      variant={mappedVariant}
       size={size}
       {...props}
     >
