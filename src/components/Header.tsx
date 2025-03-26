@@ -1,8 +1,8 @@
 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Book, Mic, Users, ArrowLeft, BarChart3, Gift, Menu } from 'lucide-react';
+import { Book, Mic, Users, ArrowLeft, BarChart3, Gift, Menu, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const Header = () => {
   const location = useLocation();
@@ -16,9 +16,17 @@ const Header = () => {
   const isDashboardPage = location.pathname === '/dashboard';
   const isGiftsPage = location.pathname === '/gifts';
 
+  // Close menu when changing routes
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   const handleBackNavigation = () => {
-    // Use window.location for a full page reload and navigation to root
-    window.location.href = '/';
+    if (isHomePage) {
+      window.location.href = '/';
+    } else {
+      navigate('/home');
+    }
   };
   
   const toggleMenu = () => {
@@ -84,9 +92,13 @@ const Header = () => {
           <button 
             onClick={toggleMenu}
             className="p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
-            aria-label="Menu"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
           >
-            <Menu size={20} className="text-theme-purple" />
+            {menuOpen ? (
+              <X size={20} className="text-theme-purple" />
+            ) : (
+              <Menu size={20} className="text-theme-purple" />
+            )}
           </button>
         )}
         
@@ -119,55 +131,52 @@ const Header = () => {
         )}
       </div>
       
-      {/* Mobile menu */}
-      {isHomePage && isMobile && menuOpen && (
-        <nav className="mt-3 pt-3 border-t border-theme-purple/10 grid grid-cols-5 gap-2 animate-fade-in">
-          <Link 
-            to="/" 
-            className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
-            aria-label="Home"
-            onClick={() => setMenuOpen(false)}
-          >
-            <Book size={20} className="text-theme-purple mb-1" />
-            <span className="text-xs text-theme-purple">Accueil</span>
-          </Link>
-          <Link 
-            to="/record" 
-            className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
-            aria-label="Record"
-            onClick={() => setMenuOpen(false)}
-          >
-            <Mic size={20} className="text-theme-purple mb-1" />
-            <span className="text-xs text-theme-purple">Enreg.</span>
-          </Link>
-          <Link 
-            to="/children" 
-            className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
-            aria-label="Children"
-            onClick={() => setMenuOpen(false)}
-          >
-            <Users size={20} className="text-theme-purple mb-1" />
-            <span className="text-xs text-theme-purple">Enfants</span>
-          </Link>
-          <Link 
-            to="/dashboard" 
-            className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
-            aria-label="Dashboard"
-            onClick={() => setMenuOpen(false)}
-          >
-            <BarChart3 size={20} className="text-theme-purple mb-1" />
-            <span className="text-xs text-theme-purple">Stats</span>
-          </Link>
-          <Link 
-            to="/gifts" 
-            className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20"
-            aria-label="Gifts"
-            onClick={() => setMenuOpen(false)}
-          >
-            <Gift size={20} className="text-theme-purple mb-1" />
-            <span className="text-xs text-theme-purple">Cadeaux</span>
-          </Link>
-        </nav>
+      {/* Mobile menu - improved with better focus and transitions */}
+      {isHomePage && isMobile && (
+        <div className={`${menuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden transition-all duration-300 ease-in-out`}>
+          <nav className="mt-3 pt-3 border-t border-theme-purple/10 grid grid-cols-5 gap-1">
+            <Link 
+              to="/" 
+              className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20 active:scale-95"
+              aria-label="Home"
+            >
+              <Book size={20} className="text-theme-purple mb-1" />
+              <span className="text-xs text-theme-purple font-medium">Accueil</span>
+            </Link>
+            <Link 
+              to="/record" 
+              className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20 active:scale-95"
+              aria-label="Record"
+            >
+              <Mic size={20} className="text-theme-purple mb-1" />
+              <span className="text-xs text-theme-purple font-medium">Enreg.</span>
+            </Link>
+            <Link 
+              to="/children" 
+              className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20 active:scale-95"
+              aria-label="Children"
+            >
+              <Users size={20} className="text-theme-purple mb-1" />
+              <span className="text-xs text-theme-purple font-medium">Enfants</span>
+            </Link>
+            <Link 
+              to="/dashboard" 
+              className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20 active:scale-95"
+              aria-label="Dashboard"
+            >
+              <BarChart3 size={20} className="text-theme-purple mb-1" />
+              <span className="text-xs text-theme-purple font-medium">Stats</span>
+            </Link>
+            <Link 
+              to="/gifts" 
+              className="flex flex-col items-center p-2 rounded-xl transition-colors hover:bg-theme-purple-light/20 active:scale-95"
+              aria-label="Gifts"
+            >
+              <Gift size={20} className="text-theme-purple mb-1" />
+              <span className="text-xs text-theme-purple font-medium">Cadeaux</span>
+            </Link>
+          </nav>
+        </div>
       )}
     </header>
   );
