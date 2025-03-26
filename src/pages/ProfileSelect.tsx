@@ -1,13 +1,18 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Shield, Plus, Crown, BookOpen, Mic, Trophy, Medal } from 'lucide-react';
+import { User, Shield, Plus, Crown, BookOpen, Mic, Trophy, Medal, Camera, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Child, CompletedDay, Recording } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 import {
   Table,
   TableBody,
@@ -35,6 +40,12 @@ const ProfileSelect = () => {
     recordings: number;
     tokens: number;
   }[]>([]);
+  
+  // Profile picture upload states
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get current month date range
   const currentDate = new Date();
@@ -110,6 +121,80 @@ const ProfileSelect = () => {
     return <span className="text-gray-500 font-medium ml-1">#{index + 1}</span>;
   };
 
+  // Handle opening the upload dialog
+  const handleOpenUploadDialog = (childId: string) => {
+    setSelectedChildId(childId);
+    setPreviewUrl(children.find(child => child.id === childId)?.avatar || null);
+    setUploadDialogOpen(true);
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (limit to 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("L'image est trop grande", {
+        description: "La taille maximum est de 2MB"
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Format de fichier non supporté", {
+        description: "Veuillez sélectionner une image"
+      });
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle save profile picture
+  const handleSaveAvatar = () => {
+    if (!selectedChildId || !previewUrl) return;
+
+    // Update the child's avatar in storage
+    setChildren(prevChildren => 
+      prevChildren.map(child => 
+        child.id === selectedChildId 
+          ? { ...child, avatar: previewUrl } 
+          : child
+      )
+    );
+
+    toast.success("Photo de profil mise à jour !");
+    setUploadDialogOpen(false);
+    setSelectedChildId(null);
+    setPreviewUrl(null);
+  };
+
+  // Handle remove profile picture
+  const handleRemoveAvatar = () => {
+    if (!selectedChildId) return;
+
+    // Remove the avatar from the child
+    setChildren(prevChildren => 
+      prevChildren.map(child => 
+        child.id === selectedChildId 
+          ? { ...child, avatar: undefined } 
+          : child
+      )
+    );
+
+    toast.success("Photo de profil supprimée");
+    setUploadDialogOpen(false);
+    setSelectedChildId(null);
+    setPreviewUrl(null);
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col justify-center items-center bg-gradient-to-b from-theme-blue/5 to-theme-purple/5">
       <div className="mb-8 text-center">
@@ -129,42 +214,53 @@ const ProfileSelect = () => {
                 onMouseEnter={() => setHoveredProfile(child.id)}
                 onMouseLeave={() => setHoveredProfile(null)}
               >
-                <button
-                  onClick={() => handleProfileSelect(child.id)}
-                  className="group relative w-full aspect-square mb-3 transition-all duration-200 ease-in-out"
-                >
-                  <div className={cn(
-                    "absolute inset-0 rounded-md overflow-hidden border-4 transition-all duration-300",
-                    hoveredProfile === child.id 
-                      ? "border-theme-purple/80 shadow-xl scale-105" 
-                      : "border-transparent"
-                  )}>
-                    <div className="bg-gradient-to-br from-theme-blue/20 to-theme-purple/20 w-full h-full flex items-center justify-center rounded-md overflow-hidden">
-                      {child.avatar ? (
-                        <img 
-                          src={child.avatar} 
-                          alt={child.name} 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-theme-blue/30 to-theme-purple/30 flex items-center justify-center">
-                          <User size={72} className="text-white/80" />
-                        </div>
-                      )}
+                <div className="relative w-full aspect-square mb-3">
+                  <button
+                    onClick={() => handleProfileSelect(child.id)}
+                    className="group w-full h-full transition-all duration-200 ease-in-out"
+                  >
+                    <div className={cn(
+                      "absolute inset-0 rounded-md overflow-hidden border-4 transition-all duration-300",
+                      hoveredProfile === child.id 
+                        ? "border-theme-purple/80 shadow-xl scale-105" 
+                        : "border-transparent"
+                    )}>
+                      <div className="bg-gradient-to-br from-theme-blue/20 to-theme-purple/20 w-full h-full flex items-center justify-center rounded-md overflow-hidden">
+                        {child.avatar ? (
+                          <img 
+                            src={child.avatar} 
+                            alt={child.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-theme-blue/30 to-theme-purple/30 flex items-center justify-center">
+                            <User size={72} className="text-white/80" />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  {hoveredProfile === child.id && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-md">
-                      <Button
-                        variant="default"
-                        size="lg"
-                        className="bg-white text-theme-purple hover:bg-white/90"
-                      >
-                        Sélectionner
-                      </Button>
-                    </div>
-                  )}
-                </button>
+                    {hoveredProfile === child.id && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-md">
+                        <Button
+                          variant="default"
+                          size="lg"
+                          className="bg-white text-theme-purple hover:bg-white/90"
+                        >
+                          Sélectionner
+                        </Button>
+                      </div>
+                    )}
+                  </button>
+                  
+                  {/* Edit profile picture button */}
+                  <button 
+                    onClick={() => handleOpenUploadDialog(child.id)}
+                    className="absolute bottom-2 right-2 bg-theme-purple text-white p-1.5 rounded-full shadow-md hover:bg-theme-purple/90 transition-colors z-10"
+                    title="Modifier la photo de profil"
+                  >
+                    <Camera size={16} />
+                  </button>
+                </div>
                 <span className="text-lg font-medium text-gray-800">{child.name}</span>
               </div>
             ))}
@@ -242,11 +338,12 @@ const ProfileSelect = () => {
                       <TableCell className="py-2">
                         <div className="flex items-center gap-2">
                           {stat.avatar ? (
-                            <img 
-                              src={stat.avatar} 
-                              alt={stat.name} 
-                              className="w-6 h-6 rounded-full object-cover"
-                            />
+                            <Avatar className="w-6 h-6">
+                              <AvatarImage src={stat.avatar} alt={stat.name} />
+                              <AvatarFallback>
+                                <User size={16} className="text-theme-purple/70" />
+                              </AvatarFallback>
+                            </Avatar>
                           ) : (
                             <User size={16} className="text-theme-purple/70" />
                           )}
@@ -269,6 +366,68 @@ const ProfileSelect = () => {
           </div>
         </div>
       </div>
+
+      {/* Profile Picture Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Photo de profil</DialogTitle>
+            <DialogDescription>
+              Téléchargez une photo pour personnaliser le profil
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col items-center justify-center gap-4 py-4">
+            <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
+              {previewUrl ? (
+                <img 
+                  src={previewUrl} 
+                  alt="Preview" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <User size={64} className="text-gray-400" />
+                </div>
+              )}
+            </div>
+            
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor="profile-picture">Sélectionner une image</Label>
+              <Input
+                id="profile-picture"
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                className="cursor-pointer"
+              />
+            </div>
+            
+            <div className="flex gap-3 mt-2">
+              <Button
+                onClick={handleSaveAvatar}
+                disabled={!previewUrl}
+                variant="outline"
+                className="border-theme-purple text-theme-purple hover:bg-theme-purple/10"
+              >
+                Enregistrer
+              </Button>
+              
+              {previewUrl && (
+                <Button
+                  onClick={handleRemoveAvatar}
+                  variant="outline"
+                  className="border-red-500 text-red-500 hover:bg-red-500/10"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Supprimer
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
