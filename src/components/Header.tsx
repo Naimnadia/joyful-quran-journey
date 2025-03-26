@@ -11,8 +11,8 @@ const Header = () => {
   const isDashboardPage = location.pathname === '/dashboard';
   const isGiftsPage = location.pathname === '/gifts';
 
-  const handleReturnToProfiles = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleReturnToProfiles = () => {
+    // Direct navigation to root path instead of using the event
     navigate('/');
   };
 

@@ -1,67 +1,83 @@
 
 import React from 'react';
-import { Gift as GiftIcon, Coins, User } from 'lucide-react';
-import { Gift } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { Gift as GiftType } from '@/types';
+import { Gift, Coins, Check, Edit, Trash } from 'lucide-react';
 
-interface GiftCardProps {
-  gift: Gift;
-  userTokens: number;
+export interface GiftCardProps {
+  gift: GiftType;
+  userTokens?: number;
   childName?: string;
+  onAssign?: () => Promise<void>;
+  onDelete?: () => Promise<void>;
+  isAssigned?: boolean;
+  canAfford?: boolean;
+  editMode?: boolean;
 }
 
-const GiftCard = ({ gift, userTokens, childName }: GiftCardProps) => {
-  const canAfford = userTokens >= gift.tokenCost;
-
+const GiftCard = ({ 
+  gift, 
+  userTokens = 0, 
+  childName,
+  onAssign,
+  onDelete,
+  isAssigned = false,
+  canAfford = false,
+  editMode = false
+}: GiftCardProps) => {
   return (
-    <div className={cn(
-      "gift-card glass-card rounded-xl p-4 transition-all",
-      canAfford ? 'border-2 border-theme-amber animate-pulse' : 'border border-gray-200',
-    )}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold text-sm">{gift.name}</h3>
-        <Badge 
-          variant="outline" 
-          className={cn("flex items-center gap-1", 
-            canAfford ? 'bg-theme-amber text-white' : 'bg-gray-100'
-          )}
-        >
-          <span>{gift.tokenCost}</span>
-          <Coins size={8} />
-        </Badge>
-      </div>
-      
-      <p className="text-xs text-gray-600 mb-3">{gift.description}</p>
-      
-      {gift.imageSrc ? (
-        <div className="w-full h-24 rounded-lg overflow-hidden">
-          <img 
-            src={gift.imageSrc} 
-            alt={gift.name} 
-            className="w-full h-full object-cover"
-          />
-        </div>
-      ) : (
-        <div className="w-full h-24 rounded-lg bg-gray-100 flex items-center justify-center">
-          <GiftIcon size={16} className="text-gray-400" />
-        </div>
-      )}
-
-      <div className="mt-3 flex items-center justify-between">
-        <div className={cn("text-sm font-medium", 
-          canAfford ? 'text-theme-amber' : 'text-gray-400'
-        )}>
-          {canAfford ? 'Disponible !' : `Manque ${gift.tokenCost - userTokens}`}
+    <div className={`relative bg-white rounded-xl p-3 shadow-sm ${isAssigned ? 'border-2 border-theme-purple' : ''}`}>
+      <div className="flex justify-between mb-2">
+        <div className="p-2 rounded-lg bg-theme-purple/10">
+          <Gift size={18} className="text-theme-purple" />
         </div>
         
-        {childName && (
-          <div className="flex items-center text-xs text-theme-purple">
-            <User size={8} className="mr-1" /> 
-            <span>{childName}</span>
-          </div>
-        )}
+        <div className="flex items-center bg-theme-amber/10 px-2 py-1 rounded-full">
+          <Coins size={14} className="text-theme-amber mr-1" />
+          <span className="font-medium text-theme-amber">{gift.tokenCost}</span>
+        </div>
       </div>
+      
+      <h3 className="font-medium text-sm mb-1">{gift.name}</h3>
+      
+      <p className="text-xs text-gray-500 mb-3">{gift.description}</p>
+      
+      {editMode ? (
+        <div className="flex justify-end space-x-2">
+          <button 
+            onClick={onDelete}
+            className="p-1.5 rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-colors"
+          >
+            <Trash size={14} />
+          </button>
+          
+          <button 
+            className="p-1.5 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+          >
+            <Edit size={14} />
+          </button>
+        </div>
+      ) : isAssigned ? (
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-gray-500">
+            Assigné à {childName}
+          </span>
+          <div className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-500 rounded-full">
+            <Check size={14} />
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={onAssign}
+          disabled={!canAfford}
+          className={`w-full py-1.5 px-3 rounded-lg text-xs font-medium ${
+            canAfford 
+              ? 'bg-theme-purple text-white hover:bg-theme-purple-dark' 
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+          } transition-colors`}
+        >
+          {canAfford ? 'Obtenir' : 'Insuffisant'}
+        </button>
+      )}
     </div>
   );
 };
