@@ -14,12 +14,15 @@ export interface Tables {
 // Helper functions for data access
 export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
   try {
+    // Convert camelCase to snake_case for table names if needed
+    const tableName = table === 'completedDays' ? 'completed_days' : table;
+    
     const { data, error } = await supabase
-      .from(table as string)
+      .from(tableName)
       .select('*');
     
     if (error) throw error;
-    return data || [];
+    return (data || []) as T[];
   } catch (error) {
     console.error(`Error fetching ${table}:`, error);
     return [];
@@ -28,9 +31,12 @@ export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
 
 export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void> {
   try {
+    // Convert camelCase to snake_case for table names if needed
+    const tableName = table === 'completedDays' ? 'completed_days' : table;
+    
     // Remove all existing data (simplified approach)
     const { error: deleteError } = await supabase
-      .from(table as string)
+      .from(tableName)
       .delete()
       .not('id', 'is', null);
     
@@ -39,7 +45,7 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
     // Insert new data
     if (data.length > 0) {
       const { error: insertError } = await supabase
-        .from(table as string)
+        .from(tableName)
         .insert(data as any[]);
       
       if (insertError) throw insertError;

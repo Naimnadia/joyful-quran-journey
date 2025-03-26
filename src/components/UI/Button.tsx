@@ -1,8 +1,5 @@
 
 // This file redirects to the main button component
-import { Button } from "@/components/ui/button";
-import type { ButtonProps } from "@/components/ui/button";
+import { Button, ButtonProps, buttonVariants } from "@/components/ui/button";
 
-export type { ButtonProps };
-export { Button };
-export default Button;
+export { Button, ButtonProps, buttonVariants };
