@@ -1,13 +1,6 @@
 
-import { Award, Star, Clock, Zap, BookOpen, ThumbsUp } from 'lucide-react';
-
-export interface BadgeType {
-  id: string;
-  title: string;
-  icon: string;
-  description: string;
-  unlocked: boolean;
-}
+import { Award, Star, Clock, Zap, BookOpen, ThumbsUp, Mic } from 'lucide-react';
+import { BadgeType } from '@/types';
 
 interface BadgeProps {
   badge: BadgeType;
@@ -20,6 +13,7 @@ const IconMap: Record<string, React.ElementType> = {
   'zap': Zap,
   'book': BookOpen,
   'thumbsUp': ThumbsUp,
+  'mic': Mic,
 };
 
 const Badge = ({ badge }: BadgeProps) => {
@@ -27,13 +21,23 @@ const Badge = ({ badge }: BadgeProps) => {
   const colorClass = badge.unlocked ? getBadgeColor(badge.id) : 'bg-gray-200';
   
   return (
-    <div className={`badge ${badge.unlocked ? 'animate-float' : 'badge-locked'} ${colorClass}`}>
-      <div className="badge-icon">
-        <IconComponent size={40} className={badge.unlocked ? 'text-white' : 'text-gray-500'} />
+    <div 
+      className={`badge ${badge.unlocked ? 'animate-float' : 'badge-locked'} ${colorClass} relative rounded-lg p-3 flex flex-col items-center justify-center h-24`}
+      title={badge.description}
+    >
+      <div className="badge-icon mb-2">
+        <IconComponent size={32} className={badge.unlocked ? 'text-white' : 'text-gray-500'} />
       </div>
-      <div className="badge-title text-white">
+      <div className="badge-title text-white text-xs text-center font-medium">
         {badge.title}
       </div>
+      {!badge.unlocked && (
+        <div className="absolute inset-0 bg-gray-100/50 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+            <div className="lock-icon">🔒</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

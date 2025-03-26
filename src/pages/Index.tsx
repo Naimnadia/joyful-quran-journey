@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { Mic, Award, BookOpen, Star, User, ChevronDown } from 'lucide-react';
 import Header from '@/components/Header';
 import Calendar from '@/components/Calendar';
@@ -180,26 +181,29 @@ const Index = () => {
     
     const updatedBadges = [...badges];
     
-    if (streak >= 3) {
+    // Update streak badges
+    if (currentStreak >= 3) {
       updatedBadges.find(b => b.id === 'streak-3')!.unlocked = true;
     }
     
-    if (streak >= 7) {
+    if (currentStreak >= 7) {
       updatedBadges.find(b => b.id === 'streak-7')!.unlocked = true;
     }
     
-    if (streak >= 30) {
+    if (currentStreak >= 30) {
       updatedBadges.find(b => b.id === 'streak-30')!.unlocked = true;
     }
     
-    if (totalRecordings >= 5) {
+    // Update recording badges
+    if (childRecordings.length >= 5) {
       updatedBadges.find(b => b.id === 'recordings-5')!.unlocked = true;
     }
     
-    if (totalRecordings >= 10) {
+    if (childRecordings.length >= 10) {
       updatedBadges.find(b => b.id === 'recordings-10')!.unlocked = true;
     }
     
+    // Check for perfect week
     const hasCompletedPerfectWeek = checkForPerfectWeek(childCompletedDays, childRecordings);
     if (hasCompletedPerfectWeek) {
       updatedBadges.find(b => b.id === 'perfect-week')!.unlocked = true;
@@ -208,10 +212,40 @@ const Index = () => {
     if (JSON.stringify(updatedBadges) !== JSON.stringify(badges)) {
       setBadges(updatedBadges);
     }
-  }, [childCompletedDays, childRecordings, badges, setBadges, streak, selectedChildId]);
+  }, [childCompletedDays, childRecordings, badges, setBadges, selectedChildId]);
   
   const checkForPerfectWeek = (completedDays: string[], recordings: string[]): boolean => {
-    return false;
+    // Get current week's date range
+    const today = new Date();
+    const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 1 }); // Start week on Monday
+    const endOfCurrentWeek = endOfWeek(today, { weekStartsOn: 1 });
+    
+    // Get all days in the current week
+    const daysInWeek = eachDayOfInterval({
+      start: startOfCurrentWeek,
+      end: endOfCurrentWeek
+    });
+    
+    // Check if each day in the week has both a completion and recording
+    for (const day of daysInWeek) {
+      const formattedDay = format(day, 'yyyy-MM-dd');
+      
+      const dayCompleted = completedDays.some(completedDay => 
+        completedDay === formattedDay
+      );
+      
+      const dayRecorded = recordings.some(recordedDay => 
+        recordedDay === formattedDay
+      );
+      
+      // If any day is missing either completion or recording, return false
+      if (!dayCompleted || !dayRecorded) {
+        return false;
+      }
+    }
+    
+    // If we got here, all days in the week have both completion and recording
+    return true;
   };
   
   const markTodayAsCompleted = () => {
