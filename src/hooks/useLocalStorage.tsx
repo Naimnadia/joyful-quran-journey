@@ -1,56 +1,38 @@
-import { useState, useEffect } from 'react';
+
+import { useEffect } from 'react';
+import { useGlobalState } from './useGlobalState';
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
-  // Get from local storage then parse stored json or return initialValue
-  const readValue = (): T => {
-    if (typeof window === 'undefined') {
-      return initialValue;
-    }
-
+  // Use global state instead of localStorage
+  const [storedValue, setStoredValue] = useGlobalState<T>(key, initialValue);
+  
+  // For backward compatibility, also update localStorage when global state changes
+  useEffect(() => {
     try {
-      const item = window.localStorage.getItem(key);
-      return item ? (JSON.parse(item) as T) : initialValue;
-    } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
-    }
-  };
-
-  const [storedValue, setStoredValue] = useState<T>(readValue);
-
-  const setValue = (value: T | ((val: T) => T)) => {
-    try {
-      // Allow value to be a function so we have the same API as useState
-      const valueToStore =
-        value instanceof Function ? value(storedValue) : value;
-      
-      // Save state
-      setStoredValue(valueToStore);
-      
-      // Save to local storage
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        window.localStorage.setItem(key, JSON.stringify(storedValue));
       }
     } catch (error) {
       console.warn(`Error setting localStorage key "${key}":`, error);
     }
-  };
+  }, [key, storedValue]);
 
+  // Initial load from localStorage for migration (only once)
   useEffect(() => {
-    setStoredValue(readValue());
+    try {
+      if (typeof window !== 'undefined') {
+        const item = window.localStorage.getItem(key);
+        if (item) {
+          const parsedItem = JSON.parse(item);
+          setStoredValue(parsedItem);
+        }
+      }
+    } catch (error) {
+      console.warn(`Error reading localStorage key "${key}":`, error);
+    }
+    // Only run this effect once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setStoredValue(readValue());
-    };
-
-    // Listen for storage changes to keep all tabs in sync
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return [storedValue, setValue] as const;
+  return [storedValue, setStoredValue] as const;
 }

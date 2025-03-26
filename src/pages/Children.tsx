@@ -7,7 +7,7 @@ import { fr } from 'date-fns/locale';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Child, CompletedDay, Recording } from '@/types';
 import Header from '@/components/Header';
-import Button from '@/components/UI/Button';
+import { Button } from '@/components/ui/button';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import {

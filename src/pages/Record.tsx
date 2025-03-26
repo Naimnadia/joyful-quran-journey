@@ -7,7 +7,7 @@ import { Calendar, Mic, User } from 'lucide-react';
 import Header from '@/components/Header';
 import AudioRecorder from '@/components/AudioRecorder';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import Button from '@/components/UI/Button';
+import { Button } from '@/components/ui/button';
 import { Child, Recording, CompletedDay } from '@/types';
 
 // Helper function to get URL parameters
