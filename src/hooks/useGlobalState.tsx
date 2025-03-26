@@ -1,7 +1,69 @@
 
+import { useState, createContext, useContext, useCallback, ReactNode } from 'react';
 import { fetchData, syncData } from '@/lib/supabase';
 import type { Child, CompletedDay, Recording, TokenType, Gift } from '@/types';
+import { toast } from 'sonner';
 
+// Define the shape of our global state
+interface GlobalState {
+  [key: string]: any;
+}
+
+// Create context
+const GlobalStateContext = createContext<{
+  state: GlobalState;
+  setState: <T>(key: string, value: T) => void;
+}>({
+  state: {},
+  setState: () => {}
+});
+
+// Create a provider component
+export function GlobalStateProvider({ children }: { children: ReactNode }) {
+  const [state, setStateRaw] = useState<GlobalState>({});
+
+  const setState = useCallback(<T>(key: string, value: T) => {
+    setStateRaw(prevState => ({
+      ...prevState,
+      [key]: value
+    }));
+    
+    // Also update localStorage for backward compatibility
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, JSON.stringify(value));
+      }
+    } catch (error) {
+      console.error(`Failed to save ${key} to localStorage:`, error);
+    }
+  }, []);
+
+  return (
+    <GlobalStateContext.Provider value={{ state, setState }}>
+      {children}
+    </GlobalStateContext.Provider>
+  );
+}
+
+// Create a hook to use the global state
+export function useGlobalState<T>(key: string, initialValue: T): [T, (value: T) => void] {
+  const { state, setState } = useContext(GlobalStateContext);
+  
+  // If the value doesn't exist in state yet, initialize it
+  if (state[key] === undefined && initialValue !== undefined) {
+    setState(key, initialValue);
+  }
+  
+  const value = state[key] !== undefined ? state[key] : initialValue;
+  
+  const setValue = useCallback((newValue: T) => {
+    setState(key, newValue);
+  }, [key, setState]);
+  
+  return [value, setValue];
+}
+
+// Initialize data from backend
 export async function initializeFromBackend(): Promise<void> {
   try {
     console.log('Initializing from backend...');

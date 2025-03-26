@@ -1,19 +1,16 @@
-
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Book, Mic, Users, ArrowLeft, BarChart3, Gift } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const isHomePage = location.pathname === '/home';
   const isRecordPage = location.pathname.includes('/record');
   const isChildrenPage = location.pathname === '/children';
   const isDashboardPage = location.pathname === '/dashboard';
   const isGiftsPage = location.pathname === '/gifts';
 
-  const handleReturnToProfiles = () => {
-    // Clear any query parameters that might be causing issues
-    // Use window.location to force a complete page refresh
+  const handleBackNavigation = () => {
+    // Force a full page reload and navigation to root
     window.location.href = '/';
   };
 
@@ -24,7 +21,7 @@ const Header = () => {
           <h1 className="text-2xl font-bold text-theme-purple">Daily Coran</h1>
         ) : (
           <button 
-            onClick={handleReturnToProfiles}
+            onClick={handleBackNavigation}
             className="flex items-center text-theme-purple hover:text-theme-purple-light transition-colors"
           >
             <ArrowLeft className="mr-2" size={20} />

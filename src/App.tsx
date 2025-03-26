@@ -12,7 +12,7 @@ import Children from "./pages/Children";
 import Gifts from "./pages/Gifts";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
-import { initializeFromBackend } from "./hooks/useGlobalState";
+import { initializeFromBackend, GlobalStateProvider } from "./hooks/useGlobalState";
 
 const queryClient = new QueryClient();
 
@@ -42,23 +42,25 @@ const App = () => {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<ProfileSelect />} />
-            <Route path="/home" element={<Index />} />
-            <Route path="/record/:date?" element={<Record />} />
-            <Route path="/children" element={<Children />} />
-            <Route path="/gifts" element={<Gifts />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <GlobalStateProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<ProfileSelect />} />
+              <Route path="/home" element={<Index />} />
+              <Route path="/record/:date?" element={<Record />} />
+              <Route path="/children" element={<Children />} />
+              <Route path="/gifts" element={<Gifts />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </GlobalStateProvider>
   );
 };
 
