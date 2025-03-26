@@ -37,7 +37,7 @@ export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
       }));
     }
     
-    return (transformedData || []) as T[];
+    return (transformedData || []) as unknown as T[];
   } catch (error) {
     console.error(`Error fetching ${table}:`, error);
     return [];
@@ -50,7 +50,7 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
     let tableName = table;
     
     // Transform data if needed (convert camelCase fields to snake_case)
-    let transformedData = data;
+    let transformedData;
     if (table === 'children') {
       transformedData = data.map((item: any) => ({
         id: item.id,
@@ -64,6 +64,8 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
         date: item.date,
         child_id: item.childId
       }));
+    } else {
+      transformedData = data;
     }
     
     // Remove all existing data (simplified approach)
