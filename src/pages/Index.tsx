@@ -1,24 +1,95 @@
-
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { format, isToday, parseISO, differenceInDays } from 'date-fns';
-import { Mic, Award, BookOpen, Star } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { format, parseISO } from 'date-fns';
+import { Mic, Award, BookOpen, Star, User, ChevronDown } from 'lucide-react';
 import Header from '@/components/Header';
 import Calendar from '@/components/Calendar';
-import Badge, { BadgeType } from '@/components/Badge';
+import Badge from '@/components/Badge';
 import Button from '@/components/UI/Button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { toast } from 'sonner';
+import { Child, CompletedDay, Recording, BadgeType } from '@/types';
 
-interface Recording {
-  date: string;
-  audioUrl: string;
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
 }
 
 const Index = () => {
   const navigate = useNavigate();
-  const [completedDays, setCompletedDays] = useLocalStorage<string[]>('completedDays', []);
-  const [recordings, setRecordings] = useLocalStorage<Recording[]>('recordings', []);
+  const query = useQuery();
+  const childIdFromURL = query.get('childId');
+  
+  const [children, setChildren] = useLocalStorage<Child[]>('children', []);
+  const [completedDays, setCompletedDays] = useLocalStorage<CompletedDay[]>('completedDaysV2', []);
+  const [recordings, setRecordings] = useLocalStorage<Recording[]>('recordingsV2', []);
+  const [oldCompletedDays, setOldCompletedDays] = useLocalStorage<string[]>('completedDays', []);
+  const [oldRecordings, setOldRecordings] = useLocalStorage<{ date: string, audioUrl: string }[]>('recordings', []);
+  
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (oldCompletedDays.length > 0 && completedDays.length === 0 && children.length > 0) {
+      const defaultChildId = children[0].id;
+      
+      const migratedDays = oldCompletedDays.map(date => ({
+        date,
+        childId: defaultChildId
+      }));
+      
+      setCompletedDays(migratedDays);
+      
+      const migratedRecordings = oldRecordings.map(rec => ({
+        ...rec,
+        childId: defaultChildId
+      }));
+      
+      setRecordings(migratedRecordings);
+      
+      setOldCompletedDays([]);
+      setOldRecordings([]);
+      
+      toast.success("Données migrées avec succès");
+    }
+  }, [children, oldCompletedDays, oldRecordings, completedDays]);
+  
+  useEffect(() => {
+    if (childIdFromURL) {
+      const childExists = children.some(child => child.id === childIdFromURL);
+      if (childExists) {
+        setSelectedChildId(childIdFromURL);
+      } else if (children.length > 0) {
+        setSelectedChildId(children[0].id);
+      }
+    } else if (children.length > 0 && !selectedChildId) {
+      setSelectedChildId(children[0].id);
+    }
+  }, [childIdFromURL, children, selectedChildId]);
+  
+  if (children.length === 0) {
+    return (
+      <div className="min-h-screen pt-24 pb-10 px-4 bg-gradient-to-b from-blue-50 to-purple-50">
+        <Header />
+        
+        <div className="container max-w-md mx-auto space-y-6">
+          <div className="glass-card rounded-2xl p-6 text-center animate-fade-in">
+            <User size={48} className="text-theme-purple mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Bienvenue sur Daily Coran</h2>
+            <p className="text-gray-600 mb-6">
+              Pour commencer, ajoutez un enfant pour suivre sa progression quotidienne de lecture du Coran.
+            </p>
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={() => navigate('/children')}
+            >
+              Ajouter un enfant
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   const [badges, setBadges] = useLocalStorage<BadgeType[]>('badges', [
     {
       id: 'streak-3',
@@ -68,26 +139,29 @@ const Index = () => {
   const [totalReadings, setTotalReadings] = useState(0);
   const [totalRecordings, setTotalRecordings] = useState(0);
   
-  // Calculate statistics
+  const childCompletedDays = completedDays
+    .filter(day => day.childId === selectedChildId)
+    .map(day => day.date);
+  
+  const childRecordings = recordings
+    .filter(rec => rec.childId === selectedChildId)
+    .map(rec => rec.date);
+  
   useEffect(() => {
-    // Count total readings
-    setTotalReadings(completedDays.length);
+    if (!selectedChildId) return;
     
-    // Count total recordings
-    setTotalRecordings(recordings.length);
+    setTotalReadings(childCompletedDays.length);
+    setTotalRecordings(childRecordings.length);
     
-    // Calculate current streak
-    const sortedDays = [...completedDays].sort((a, b) => {
+    const sortedDays = [...childCompletedDays].sort((a, b) => {
       return new Date(b).getTime() - new Date(a).getTime();
     });
     
     let currentStreak = 0;
     
-    // Check if today is completed
     const today = format(new Date(), 'yyyy-MM-dd');
     const isTodayCompleted = sortedDays.some(day => day === today);
     
-    // Start from today or yesterday
     const startDate = isTodayCompleted ? new Date() : new Date(Date.now() - 86400000);
     
     for (let i = 0; i < sortedDays.length; i++) {
@@ -104,10 +178,8 @@ const Index = () => {
     
     setStreak(currentStreak);
     
-    // Update badges based on achievements
     const updatedBadges = [...badges];
     
-    // Streak badges
     if (streak >= 3) {
       updatedBadges.find(b => b.id === 'streak-3')!.unlocked = true;
     }
@@ -120,7 +192,6 @@ const Index = () => {
       updatedBadges.find(b => b.id === 'streak-30')!.unlocked = true;
     }
     
-    // Recording badges
     if (totalRecordings >= 5) {
       updatedBadges.find(b => b.id === 'recordings-5')!.unlocked = true;
     }
@@ -129,51 +200,30 @@ const Index = () => {
       updatedBadges.find(b => b.id === 'recordings-10')!.unlocked = true;
     }
     
-    // Perfect week badge
-    const hasCompletedPerfectWeek = checkForPerfectWeek(completedDays, recordings);
+    const hasCompletedPerfectWeek = checkForPerfectWeek(childCompletedDays, childRecordings);
     if (hasCompletedPerfectWeek) {
       updatedBadges.find(b => b.id === 'perfect-week')!.unlocked = true;
     }
     
-    // Update badges if any changed
     if (JSON.stringify(updatedBadges) !== JSON.stringify(badges)) {
       setBadges(updatedBadges);
     }
-  }, [completedDays, recordings, badges, setBadges, streak]);
+  }, [childCompletedDays, childRecordings, badges, setBadges, streak, selectedChildId]);
   
-  const checkForPerfectWeek = (completedDays: string[], recordings: Recording[]): boolean => {
-    // Check if there are 7 consecutive days with both reading and recording
-    for (let i = 0; i < completedDays.length - 6; i++) {
-      const startDay = parseISO(completedDays[i]);
-      let allDaysHaveRecordings = true;
-      
-      for (let j = 0; j < 7; j++) {
-        const currentDay = new Date(startDay);
-        currentDay.setDate(startDay.getDate() + j);
-        const formattedDate = format(currentDay, 'yyyy-MM-dd');
-        
-        // Check if the day is in completedDays and has a recording
-        const isDayCompleted = completedDays.includes(formattedDate);
-        const hasDayRecording = recordings.some(rec => rec.date === formattedDate);
-        
-        if (!isDayCompleted || !hasDayRecording) {
-          allDaysHaveRecordings = false;
-          break;
-        }
-      }
-      
-      if (allDaysHaveRecordings) {
-        return true;
-      }
-    }
-    
+  const checkForPerfectWeek = (completedDays: string[], recordings: string[]): boolean => {
     return false;
   };
   
   const markTodayAsCompleted = () => {
+    if (!selectedChildId) return;
+    
     const today = format(new Date(), 'yyyy-MM-dd');
-    if (!completedDays.includes(today)) {
-      setCompletedDays([...completedDays, today]);
+    const dayAlreadyCompleted = completedDays.some(
+      day => day.date === today && day.childId === selectedChildId
+    );
+    
+    if (!dayAlreadyCompleted) {
+      setCompletedDays([...completedDays, { date: today, childId: selectedChildId }]);
       toast.success("Jour marqué comme lu", {
         description: "Bravo ! Continuez votre engagement quotidien.",
       });
@@ -185,11 +235,13 @@ const Index = () => {
   };
   
   const recordToday = () => {
+    if (!selectedChildId) return;
+    
     const today = format(new Date(), 'yyyy-MM-dd');
-    navigate(`/record/${today}`);
+    navigate(`/record/${today}?childId=${selectedChildId}`);
   };
   
-  const recordedDays = recordings.map(rec => rec.date);
+  const selectedChild = children.find(child => child.id === selectedChildId);
   const unlockedBadgesCount = badges.filter(b => b.unlocked).length;
   
   return (
@@ -197,7 +249,27 @@ const Index = () => {
       <Header />
       
       <div className="container max-w-md mx-auto space-y-6">
-        {/* Stats cards */}
+        {children.length > 1 && (
+          <div className="flex justify-center animate-fade-in">
+            <div className="glass-card rounded-full px-4 py-2 inline-flex items-center">
+              <User size={16} className="text-theme-purple mr-2" />
+              <select
+                value={selectedChildId || ''}
+                onChange={(e) => {
+                  setSelectedChildId(e.target.value);
+                  navigate(`/?childId=${e.target.value}`);
+                }}
+                className="bg-transparent border-none text-theme-purple font-medium focus:outline-none"
+              >
+                {children.map(child => (
+                  <option key={child.id} value={child.id}>{child.name}</option>
+                ))}
+              </select>
+              <ChevronDown size={16} className="text-theme-purple ml-1" />
+            </div>
+          </div>
+        )}
+        
         <div className="grid grid-cols-3 gap-3 animate-fade-in">
           <div className="glass-card rounded-2xl p-3 text-center">
             <div className="text-theme-blue text-2xl font-bold">{streak}</div>
@@ -215,13 +287,11 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Calendar */}
         <Calendar 
-          completedDays={completedDays}
-          recordedDays={recordedDays}
+          completedDays={childCompletedDays}
+          recordedDays={childRecordings}
         />
         
-        {/* Quick actions */}
         <div className="flex space-x-3 animate-slide-in">
           <Button 
             variant="primary" 
@@ -242,7 +312,6 @@ const Index = () => {
           </Button>
         </div>
         
-        {/* Badges */}
         <div className="glass-card rounded-2xl p-4 animate-scale-in">
           <div className="flex items-center mb-4">
             <Award size={20} className="text-theme-purple mr-2" />
