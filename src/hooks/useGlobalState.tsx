@@ -12,7 +12,7 @@ interface GlobalState {
 // Create context
 const GlobalStateContext = createContext<{
   state: GlobalState;
-  setState: <T>(key: string, value: T) => void;
+  setState: (key: string, value: any) => void;
 }>({
   state: {},
   setState: () => {}
@@ -22,7 +22,7 @@ const GlobalStateContext = createContext<{
 export function GlobalStateProvider({ children }: { children: ReactNode }) {
   const [state, setStateRaw] = useState<GlobalState>({});
 
-  const setState = useCallback(<T>(key: string, value: T) => {
+  const setState = useCallback((key: string, value: any) => {
     setStateRaw(prevState => ({
       ...prevState,
       [key]: value

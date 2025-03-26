@@ -1,8 +1,10 @@
-import { Link, useLocation } from 'react-router-dom';
+
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Book, Mic, Users, ArrowLeft, BarChart3, Gift } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === '/home';
   const isRecordPage = location.pathname.includes('/record');
   const isChildrenPage = location.pathname === '/children';
@@ -10,7 +12,7 @@ const Header = () => {
   const isGiftsPage = location.pathname === '/gifts';
 
   const handleBackNavigation = () => {
-    // Force a full page reload and navigation to root
+    // Use window.location for a full page reload and navigation to root
     window.location.href = '/';
   };
 
