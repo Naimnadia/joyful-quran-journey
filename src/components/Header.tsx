@@ -12,8 +12,9 @@ const Header = () => {
   const isGiftsPage = location.pathname === '/gifts';
 
   const handleReturnToProfiles = () => {
-    // Force navigation to the root path with replace to avoid history issues
-    navigate('/', { replace: true });
+    // Clear any query parameters that might be causing issues
+    // Use window.location to force a complete page refresh
+    window.location.href = '/';
   };
 
   return (

@@ -68,21 +68,30 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
       transformedData = data;
     }
     
-    // Remove all existing data (simplified approach)
-    const { error: deleteError } = await supabase
-      .from(tableName)
-      .delete()
-      .not('id', 'is', null);
-    
-    if (deleteError) throw deleteError;
+    // Remove all existing data
+    try {
+      const { error: deleteError } = await supabase
+        .from(tableName)
+        .delete()
+        .not('id', 'is', null);
+      
+      if (deleteError) throw deleteError;
+    } catch (deleteError) {
+      console.error(`Error deleting data from ${table}:`, deleteError);
+      // Continue with insert even if delete fails
+    }
     
     // Insert new data
     if (transformedData.length > 0) {
-      const { error: insertError } = await supabase
-        .from(tableName)
-        .insert(transformedData as any[]);
-      
-      if (insertError) throw insertError;
+      try {
+        const { error: insertError } = await supabase
+          .from(tableName)
+          .insert(transformedData as any[]);
+        
+        if (insertError) throw insertError;
+      } catch (insertError) {
+        console.error(`Error inserting data to ${table}:`, insertError);
+      }
     }
   } catch (error) {
     console.error(`Error saving ${table}:`, error);
@@ -91,17 +100,25 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
 
 export async function syncData<T>(table: keyof Tables, localData: T[]): Promise<T[]> {
   try {
-    // Simplified sync mechanism - in real app, you'd implement more complex merging
-    const remoteData = await fetchData<T>(table);
-    
-    if (remoteData.length > 0) {
-      return remoteData;
-    } else {
-      await saveData(table, localData);
+    // Improved sync mechanism with more error handling
+    try {
+      const remoteData = await fetchData<T>(table);
+      
+      if (remoteData.length > 0) {
+        console.log(`Remote data found for ${table}, using that instead of local data`);
+        return remoteData;
+      } else {
+        console.log(`No remote data found for ${table}, saving local data to Supabase`);
+        await saveData(table, localData);
+        return localData;
+      }
+    } catch (syncError) {
+      console.error(`Error syncing ${table}:`, syncError);
+      // If sync fails, return local data as fallback
       return localData;
     }
   } catch (error) {
-    console.error(`Error syncing ${table}:`, error);
+    console.error(`Error in syncData for ${table}:`, error);
     return localData;
   }
 }
