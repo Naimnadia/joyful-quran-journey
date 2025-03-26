@@ -12,8 +12,8 @@ const Header = () => {
   const isGiftsPage = location.pathname === '/gifts';
 
   const handleReturnToProfiles = () => {
-    // Direct navigation to root path instead of using the event
-    navigate('/');
+    // Force navigation to the root path with replace to avoid history issues
+    navigate('/', { replace: true });
   };
 
   return (
