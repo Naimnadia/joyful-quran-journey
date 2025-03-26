@@ -1,6 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Child, CompletedDay, Recording, TokenType, Gift } from '@/types';
+import { fetchData, saveData, syncData } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 // Global state storage
 const globalState: {
@@ -68,24 +70,51 @@ const listeners: { [key: string]: Set<(data: any) => void> } = {
   gifts: new Set()
 };
 
-// Load saved state from localStorage on app initialization
-const loadStateFromLocalStorage = () => {
+// Initial sync state - to prevent multiple syncs at load
+const initialSynced: { [key: string]: boolean } = {};
+
+// Load saved state from localStorage and sync with backend
+const loadStateFromLocalStorage = async () => {
   try {
     if (typeof window !== 'undefined') {
+      // First load from localStorage as a starting point
       Object.keys(globalState).forEach(key => {
         const storedValue = window.localStorage.getItem(`global_${key}`);
         if (storedValue) {
           globalState[key] = JSON.parse(storedValue);
         }
       });
+
+      // Then start syncing with backend for main tables
+      const tablesToSync = ['children', 'completedDays', 'recordings', 'tokens', 'gifts'];
+      
+      for (const key of tablesToSync) {
+        if (!initialSynced[key]) {
+          initialSynced[key] = true;
+          try {
+            // Convert camelCase to snake_case for Supabase tables
+            const tableKey = key === 'completedDays' ? 'completed_days' : key;
+            const syncedData = await syncData(tableKey as any, globalState[key]);
+            
+            // Update global state with synced data
+            globalState[key] = syncedData;
+            saveStateToLocalStorage(key, syncedData);
+            
+            // Notify all components
+            if (listeners[key]) {
+              listeners[key].forEach(listener => listener(syncedData));
+            }
+          } catch (err) {
+            console.error(`Error syncing ${key}:`, err);
+          }
+        }
+      }
     }
   } catch (error) {
-    console.warn('Error loading global state from localStorage:', error);
+    console.warn('Error loading global state:', error);
+    toast.error('Error syncing data with server. Some data may be outdated.');
   }
 };
-
-// Initialize by loading from localStorage
-loadStateFromLocalStorage();
 
 // Function to save state to localStorage
 const saveStateToLocalStorage = (key: string, value: any) => {
@@ -95,6 +124,20 @@ const saveStateToLocalStorage = (key: string, value: any) => {
     }
   } catch (error) {
     console.warn(`Error saving global state for key "${key}":`, error);
+  }
+};
+
+// Function to save state to backend
+const saveStateToBackend = async (key: string, value: any) => {
+  try {
+    // Only sync main data tables
+    if (['children', 'completedDays', 'recordings', 'tokens', 'gifts'].includes(key)) {
+      const tableKey = key === 'completedDays' ? 'completed_days' : key;
+      await saveData(tableKey as any, value);
+    }
+  } catch (error) {
+    console.warn(`Error saving to backend for key "${key}":`, error);
+    toast.error(`Failed to save ${key} to the server. Changes may not persist across devices.`);
   }
 };
 
@@ -133,7 +176,7 @@ export function useGlobalState<T>(key: string, initialValue: T): [T, (value: T |
   }, [key]);
 
   // Define the setter function
-  const setValue = useCallback((value: T | ((val: T) => T)) => {
+  const setValue = useCallback(async (value: T | ((val: T) => T)) => {
     const valueToStore = value instanceof Function ? value(state) : value;
     
     // Update global state
@@ -141,6 +184,9 @@ export function useGlobalState<T>(key: string, initialValue: T): [T, (value: T |
     
     // Save to localStorage
     saveStateToLocalStorage(key, valueToStore);
+    
+    // Save to backend
+    await saveStateToBackend(key, valueToStore);
     
     // Notify all listeners
     if (listeners[key]) {
@@ -154,19 +200,16 @@ export function useGlobalState<T>(key: string, initialValue: T): [T, (value: T |
   return [state, setValue];
 }
 
-// This function allows easy initialization from localStorage for migration purposes
-export function initializeFromLocalStorage() {
-  loadStateFromLocalStorage();
-  
-  // Notify all listeners
-  Object.keys(globalState).forEach(key => {
-    if (listeners[key]) {
-      listeners[key].forEach(listener => listener(globalState[key]));
-    }
-  });
+// This function allows easy initialization from backend for migration purposes
+export async function initializeFromBackend() {
+  await loadStateFromLocalStorage();
 }
 
-// Call this when the app loads to ensure data is loaded from localStorage
+// Call this when the app loads to ensure data is loaded from localStorage and backend
 if (typeof window !== 'undefined') {
-  window.addEventListener('load', initializeFromLocalStorage);
+  window.addEventListener('load', () => {
+    initializeFromBackend().catch(err => {
+      console.error('Failed to initialize from backend:', err);
+    });
+  });
 }

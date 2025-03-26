@@ -1,6 +1,7 @@
 
 import { useEffect } from 'react';
 import { useGlobalState } from './useGlobalState';
+import { toast } from 'sonner';
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   // Use global state instead of localStorage
@@ -14,6 +15,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       }
     } catch (error) {
       console.warn(`Error setting localStorage key "${key}":`, error);
+      toast.error('Failed to save data locally. Changes may not persist if you close the browser.');
     }
   }, [key, storedValue]);
 

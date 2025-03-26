@@ -1,9 +1,8 @@
-
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gift as GiftIcon, Coins, Upload, Trash2, Plus, ArrowLeft, Edit, Save } from 'lucide-react';
 import Header from '@/components/Header';
-import Button from '@/components/UI/Button';
+import Button from '@/components/ui/button';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { toast } from 'sonner';
 import { Gift } from '@/types';
