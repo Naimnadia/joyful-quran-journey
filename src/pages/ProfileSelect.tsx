@@ -256,8 +256,8 @@ const ProfileSelect = () => {
             />
             <Button
               variant="default"
-              className="flex items-center"
               onClick={handleAddChild}
+              className="flex items-center"
             >
               <UserPlus size={18} className="mr-2" />
               Ajouter

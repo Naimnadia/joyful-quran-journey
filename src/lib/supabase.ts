@@ -22,7 +22,22 @@ export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
       .select('*');
     
     if (error) throw error;
-    return (data || []) as T[];
+    
+    // Transform data if needed (convert snake_case fields to camelCase)
+    let transformedData = data;
+    if (table === 'children') {
+      transformedData = data.map((item: any) => ({
+        ...item,
+        createdAt: item.created_at
+      }));
+    } else if (table === 'completed_days') {
+      transformedData = data.map((item: any) => ({
+        ...item,
+        childId: item.child_id
+      }));
+    }
+    
+    return (transformedData || []) as T[];
   } catch (error) {
     console.error(`Error fetching ${table}:`, error);
     return [];
@@ -34,6 +49,23 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
     // Use exact table name from the Tables interface
     let tableName = table;
     
+    // Transform data if needed (convert camelCase fields to snake_case)
+    let transformedData = data;
+    if (table === 'children') {
+      transformedData = data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        created_at: item.createdAt || new Date().toISOString(),
+        avatar: item.avatar
+      }));
+    } else if (table === 'completed_days') {
+      transformedData = data.map((item: any) => ({
+        id: item.id,
+        date: item.date,
+        child_id: item.childId
+      }));
+    }
+    
     // Remove all existing data (simplified approach)
     const { error: deleteError } = await supabase
       .from(tableName)
@@ -43,10 +75,10 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
     if (deleteError) throw deleteError;
     
     // Insert new data
-    if (data.length > 0) {
+    if (transformedData.length > 0) {
       const { error: insertError } = await supabase
         .from(tableName)
-        .insert(data as any[]);
+        .insert(transformedData as any[]);
       
       if (insertError) throw insertError;
     }

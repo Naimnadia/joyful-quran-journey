@@ -1,14 +1,20 @@
-
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Gift as GiftIcon, Coins, Upload, Trash2, Plus, ArrowLeft, Edit, Save } from 'lucide-react';
-import Header from '@/components/Header';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { toast } from 'sonner';
-import { Gift } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
+import { Gift, Child } from '@/types';
+import { Button } from '@/components/ui/button';
+import GiftCard from '@/components/GiftCard';
 import { 
+  ChevronLeft, 
+  PlusCircle, 
+  X, 
+  Gift as GiftIcon,
+  Trash2,
+  ArrowLeftRight
+} from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -19,344 +25,340 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { syncData } from '@/lib/supabase';
 
-const Gifts = () => {
+export default function Gifts() {
   const navigate = useNavigate();
-  const [gifts, setGifts] = useLocalStorage<Gift[]>('gifts', []);
-  const [newGiftName, setNewGiftName] = useState('');
-  const [newGiftDescription, setNewGiftDescription] = useState('');
-  const [newGiftTokenCost, setNewGiftTokenCost] = useState(10);
-  const [newGiftImage, setNewGiftImage] = useState<string | undefined>(undefined);
-  const [editingGiftId, setEditingGiftId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Find the gift being edited
-  const editingGift = editingGiftId 
-    ? gifts.find(gift => gift.id === editingGiftId) 
-    : null;
-
-  // Set up editing state when selecting a gift to edit
-  const startEditingGift = (gift: Gift) => {
-    setEditingGiftId(gift.id);
-    setNewGiftName(gift.name);
-    setNewGiftDescription(gift.description);
-    setNewGiftTokenCost(gift.tokenCost);
-    setNewGiftImage(gift.imageSrc);
-  };
-
-  // Reset the form
-  const resetForm = () => {
-    setNewGiftName('');
-    setNewGiftDescription('');
-    setNewGiftTokenCost(10);
-    setNewGiftImage(undefined);
-    setEditingGiftId(null);
-  };
-
-  // Handle image file upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Check file size (2MB max)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("L'image est trop grande", {
-        description: "Veuillez choisir une image de moins de 2Mo"
-      });
-      return;
+  // Get childId from query params
+  const childId = searchParams.get('childId');
+  
+  // Get gifts, children, and edit mode state
+  const [gifts, setGifts] = useLocalStorage<Gift[]>('gifts', []);
+  const [children, setChildren] = useLocalStorage<Child[]>('children', []);
+  const [editMode, setEditMode] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  
+  // Find the current child
+  const [currentChild, setCurrentChild] = useState<Child | undefined>(undefined);
+  
+  useEffect(() => {
+    if (childId) {
+      const child = children.find(c => c.id === childId);
+      setCurrentChild(child);
+    } else {
+      setCurrentChild(undefined);
     }
-
-    // Read the file as a data URL
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setNewGiftImage(reader.result);
+  }, [childId, children]);
+  
+  // Calculate child's tokens
+  const childTokens = currentChild ? 
+    gifts.filter(gift => gift.assignedToChildId === currentChild.id).length * 10 : 0;
+  
+  // Gift form state
+  const [giftName, setGiftName] = useState('');
+  const [giftDescription, setGiftDescription] = useState('');
+  const [giftCost, setGiftCost] = useState(10);
+  const [giftImage, setGiftImage] = useState('');
+  
+  const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null);
+  
+  // Sync with Supabase on component mount
+  useEffect(() => {
+    const syncWithSupabase = async () => {
+      try {
+        const syncedGifts = await syncData<Gift>('gifts', gifts);
+        setGifts(syncedGifts);
+      } catch (error) {
+        console.error('Error syncing gifts with Supabase:', error);
+        toast.error('Erreur de synchronisation des récompenses');
       }
     };
-    reader.readAsDataURL(file);
-  };
-
-  // Delete a gift
-  const deleteGift = (giftId: string) => {
-    setGifts(gifts.filter(gift => gift.id !== giftId));
-    toast.success("Cadeau supprimé avec succès");
     
-    // If we're editing the gift that was just deleted, reset the form
-    if (editingGiftId === giftId) {
-      resetForm();
+    syncWithSupabase();
+  }, []);
+  
+  const handleCreateGift = async () => {
+    if (!giftName.trim() || !giftDescription.trim()) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
+    }
+    
+    const newGift: Gift = {
+      id: uuidv4(),
+      name: giftName.trim(),
+      description: giftDescription.trim(),
+      tokenCost: giftCost,
+      imageSrc: giftImage.trim() || null,
+      assignedToChildId: null
+    };
+    
+    const updatedGifts = [...gifts, newGift];
+    setGifts(updatedGifts);
+    setIsAddDialogOpen(false);
+    
+    setGiftName('');
+    setGiftDescription('');
+    setGiftCost(10);
+    setGiftImage('');
+    
+    try {
+      // Save to Supabase
+      await syncData<Gift>('gifts', updatedGifts);
+      toast.success(`${newGift.name} a été ajouté avec succès`);
+    } catch (error) {
+      console.error('Error saving gift to Supabase:', error);
+      toast.error(`Erreur lors de l'ajout de ${newGift.name}`);
     }
   };
-
-  // Save a new gift or update an existing one
-  const saveGift = () => {
-    // Validate inputs
-    if (!newGiftName.trim()) {
-      toast.error("Nom du cadeau requis");
+  
+  const handleAssignGift = async (giftId: string) => {
+    if (!currentChild) {
+      toast.error("Veuillez sélectionner un enfant");
       return;
     }
-
-    if (!newGiftDescription.trim()) {
-      toast.error("Description du cadeau requise");
+    
+    const giftToAssign = gifts.find(gift => gift.id === giftId);
+    
+    if (!giftToAssign) {
+      toast.error("Récompense non trouvée");
       return;
     }
-
-    if (newGiftTokenCost <= 0) {
-      toast.error("Le coût en tokens doit être positif");
+    
+    if (childTokens < giftToAssign.tokenCost) {
+      toast.error("Pas assez de jetons");
       return;
     }
-
-    if (editingGiftId) {
-      // Update existing gift
-      setGifts(gifts.map(gift => 
-        gift.id === editingGiftId
-          ? {
-              ...gift,
-              name: newGiftName,
-              description: newGiftDescription,
-              tokenCost: newGiftTokenCost,
-              imageSrc: newGiftImage
-            }
-          : gift
-      ));
-      toast.success("Cadeau mis à jour avec succès");
-    } else {
-      // Create new gift
-      const newGift: Gift = {
-        id: uuidv4(),
-        name: newGiftName,
-        description: newGiftDescription,
-        tokenCost: newGiftTokenCost,
-        imageSrc: newGiftImage
-      };
-      setGifts([...gifts, newGift]);
-      toast.success("Nouveau cadeau ajouté");
+    
+    const updatedGifts = gifts.map(gift =>
+      gift.id === giftId ? { ...gift, assignedToChildId: currentChild.id } : gift
+    );
+    
+    setGifts(updatedGifts);
+    
+    try {
+      // Save to Supabase
+      await syncData<Gift>('gifts', updatedGifts);
+      toast.success(`${giftToAssign.name} a été attribué à ${currentChild.name}`);
+    } catch (error) {
+      console.error('Error assigning gift to Supabase:', error);
+      toast.error(`Erreur lors de l'attribution de ${giftToAssign.name}`);
     }
-
-    resetForm();
   };
-
+  
+  const handleDeleteGift = async (giftId: string) => {
+    setSelectedGiftId(giftId);
+  };
+  
+  const confirmDeleteGift = async () => {
+    if (!selectedGiftId) return;
+    
+    const updatedGifts = gifts.filter(gift => gift.id !== selectedGiftId);
+    setGifts(updatedGifts);
+    setSelectedGiftId(null);
+    
+    try {
+      // Save to Supabase
+      await syncData<Gift>('gifts', updatedGifts);
+      toast.success("Récompense supprimée avec succès");
+    } catch (error) {
+      console.error('Error removing gift from Supabase:', error);
+      toast.error("Erreur lors de la suppression");
+    }
+  };
+  
+  const cancelDeleteGift = () => {
+    setSelectedGiftId(null);
+  };
+  
+  const displayName = currentChild ? `${currentChild.name}` : 'Récompenses';
+  
+  const filteredGifts = currentChild ?
+    gifts.filter(gift => gift.assignedToChildId === null || gift.assignedToChildId === currentChild.id) :
+    gifts;
+  
   return (
-    <div className="min-h-screen pt-24 pb-10 px-4 bg-gradient-to-b from-blue-50 to-purple-50">
-      <Header />
-      
-      <div className="container max-w-md mx-auto space-y-6">
-        <div className="flex items-center justify-between animate-fade-in">
-          <Button 
-            variant="secondary" 
-            onClick={() => navigate('/')}
-            leftIcon={<ArrowLeft size={18} />}
+    <div className="min-h-screen p-4 bg-gradient-to-b from-blue-50 to-purple-50">
+      <div className="container max-w-2xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => currentChild ? navigate(`/home?childId=${currentChild.id}`) : navigate('/')}
+            className="flex items-center"
           >
+            <ChevronLeft className="mr-2" size={20} />
             Retour
           </Button>
-          <h1 className="text-xl font-bold text-theme-purple">Gérer les Cadeaux</h1>
+          
+          <h1 className="text-2xl font-bold text-theme-purple">Récompenses</h1>
+          
+          <Button
+            variant="secondary"
+            onClick={() => setEditMode(!editMode)}
+          >
+            {editMode ? <X className="mr-2" size={20} /> : <PlusCircle className="mr-2" size={20} />}
+            {editMode ? 'Terminer' : 'Gérer'}
+          </Button>
         </div>
         
-        {/* Gift Form */}
-        <div className="glass-card rounded-2xl p-4 animate-scale-in">
-          <h2 className="text-lg font-medium mb-4">
-            {editingGiftId ? "Modifier le cadeau" : "Ajouter un cadeau"}
-          </h2>
-          
-          <div className="space-y-4">
+        {currentChild && (
+          <div className="flex justify-between items-center bg-white/60 p-4 rounded-xl shadow-sm">
             <div>
-              <label className="block text-sm font-medium mb-1">Nom du cadeau</label>
-              <input
-                type="text"
-                value={newGiftName}
-                onChange={(e) => setNewGiftName(e.target.value)}
-                className="w-full p-2 border rounded-md"
-                placeholder="Livre, jouet, sortie..."
-              />
+              <h2 className="font-medium text-theme-purple">Jetons disponibles</h2>
+              <p className="text-2xl font-bold">{childTokens} jetons</p>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
-              <textarea
-                value={newGiftDescription}
-                onChange={(e) => setNewGiftDescription(e.target.value)}
-                className="w-full p-2 border rounded-md"
-                rows={3}
-                placeholder="Description du cadeau..."
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Coût en tokens</label>
-              <input
-                type="number"
-                value={newGiftTokenCost}
-                onChange={(e) => setNewGiftTokenCost(parseInt(e.target.value) || 0)}
-                className="w-full p-2 border rounded-md"
-                min="1"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Image</label>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => fileInputRef.current?.click()}
-                  leftIcon={<Upload size={18} />}
-                >
-                  {newGiftImage ? "Changer l'image" : "Ajouter une image"}
-                </Button>
-                {newGiftImage && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setNewGiftImage(undefined)}
-                    leftIcon={<Trash2 size={18} />}
-                  >
-                    Supprimer
-                  </Button>
-                )}
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                className="hidden"
-                accept="image/*"
-              />
-              
-              {newGiftImage && (
-                <div className="mt-3 relative w-full h-40 rounded-lg overflow-hidden">
-                  <img
-                    src={newGiftImage}
-                    alt="Aperçu du cadeau"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-            </div>
-            
-            <div className="flex justify-end space-x-2">
-              {editingGiftId && (
-                <Button
-                  variant="secondary"
-                  onClick={resetForm}
-                >
-                  Annuler
-                </Button>
-              )}
-              <Button
-                variant="primary"
-                onClick={saveGift}
-                leftIcon={editingGiftId ? <Save size={18} /> : <Plus size={18} />}
-              >
-                {editingGiftId ? "Mettre à jour" : "Ajouter"}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/home?childId=${currentChild.id}`)}
+            >
+              <ArrowLeftRight className="mr-2" size={18} />
+              Retour à la lecture
+            </Button>
           </div>
-        </div>
+        )}
         
-        {/* Gift List */}
-        <div className="glass-card rounded-2xl p-4 animate-scale-in">
-          <h2 className="text-lg font-medium mb-4">Liste des cadeaux</h2>
-          
-          {gifts.length === 0 ? (
-            <div className="text-center py-6 text-gray-500">
-              <GiftIcon size={32} className="mx-auto mb-2 text-gray-400" />
-              <p>Aucun cadeau disponible</p>
-              <p className="text-sm">Ajoutez des cadeaux à partir du formulaire ci-dessus</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {gifts.map((gift) => (
-                <div 
-                  key={gift.id} 
-                  className="border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-bold">{gift.name}</h3>
-                        <Badge 
-                          variant="outline" 
-                          className="flex items-center gap-1 bg-theme-amber text-white"
-                        >
-                          <span>{gift.tokenCost}</span>
-                          <Coins size={14} />
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">{gift.description}</p>
-                      
-                      {gift.assignedToChildId && (
-                        <div className="text-xs text-theme-purple mb-2">
-                          <span className="font-medium">Assigné à un enfant</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {gift.imageSrc && (
-                      <div className="w-16 h-16 rounded overflow-hidden ml-2 flex-shrink-0">
-                        <img 
-                          src={gift.imageSrc} 
-                          alt={gift.name} 
-                          className="w-full h-full object-cover" 
-                        />
-                      </div>
-                    )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {editMode && (
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <button className="bg-white/60 border-2 border-dashed border-gray-300 rounded-xl h-48 flex flex-col items-center justify-center p-4 text-gray-500 hover:bg-white/80 transition-colors">
+                  <PlusCircle size={40} className="mb-2 text-theme-purple" />
+                  <span>Ajouter une récompense</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Créer une récompense</DialogTitle>
+                  <DialogDescription>
+                    Ajoutez une nouvelle récompense que les enfants pourront gagner.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="gift-name">Nom</Label>
+                    <Input
+                      id="gift-name"
+                      value={giftName}
+                      onChange={(e) => setGiftName(e.target.value)}
+                      placeholder="ex: Sortie au parc"
+                    />
                   </div>
                   
-                  <div className="flex justify-end mt-2 space-x-2">
-                    <Button
-                      variant="secondary"
-                      onClick={() => startEditingGift(gift)}
-                      leftIcon={<Edit size={16} />}
-                      size="sm"
-                    >
-                      Modifier
-                    </Button>
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          leftIcon={<Trash2 size={16} />}
-                          size="sm"
-                          className="text-red-500 border-red-500 hover:bg-red-50"
-                        >
-                          Supprimer
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Êtes-vous sûr?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Cette action ne peut pas être annulée. Ce cadeau sera définitivement supprimé.
-                            {gift.assignedToChildId && (
-                              <p className="mt-2 text-red-500 font-medium">
-                                Attention: Ce cadeau est assigné à un enfant.
-                              </p>
-                            )}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteGift(gift.id)}
-                            className={cn(
-                              "bg-red-500 text-white hover:bg-red-600"
-                            )}
-                          >
-                            Supprimer
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                  <div className="grid gap-2">
+                    <Label htmlFor="gift-description">Description</Label>
+                    <Input
+                      id="gift-description"
+                      value={giftDescription}
+                      onChange={(e) => setGiftDescription(e.target.value)}
+                      placeholder="ex: Une après-midi au parc d'attractions"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="gift-cost">Coût en jetons</Label>
+                    <Input
+                      id="gift-cost"
+                      type="number"
+                      min={1}
+                      value={giftCost}
+                      onChange={(e) => setGiftCost(parseInt(e.target.value))}
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="gift-image">Image URL (optionnel)</Label>
+                    <Input
+                      id="gift-image"
+                      value={giftImage}
+                      onChange={(e) => setGiftImage(e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
+                
+                <DialogFooter>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsAddDialogOpen(false)}
+                    size="sm"
+                  >
+                    <X size={16} className="mr-2" />
+                    Annuler
+                  </Button>
+                  
+                  <Button
+                    variant="default"
+                    onClick={handleCreateGift}
+                    className="bg-theme-purple text-white"
+                  >
+                    <GiftIcon size={16} className="mr-2" />
+                    Créer
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           )}
+          
+          {filteredGifts.map((gift) => (
+            <GiftCard
+              key={gift.id}
+              gift={gift}
+              onAssign={currentChild ? () => handleAssignGift(gift.id) : undefined}
+              onDelete={editMode ? () => handleDeleteGift(gift.id) : undefined}
+              isAssigned={gift.assignedToChildId === (currentChild?.id || null)}
+              canAfford={currentChild ? childTokens >= gift.tokenCost : false}
+              editMode={editMode}
+            />
+          ))}
         </div>
+        
+        {filteredGifts.length === 0 && !editMode && (
+          <div className="text-center bg-white/60 p-6 rounded-xl mt-8">
+            <GiftIcon size={48} className="mx-auto text-gray-400 mb-2" />
+            <h3 className="text-xl font-medium text-gray-600">Pas de récompenses disponibles</h3>
+            <p className="text-gray-500 mb-4">Ajoutez des récompenses dans le mode édition.</p>
+            <Button
+              variant="outline"
+              onClick={() => setEditMode(true)}
+              className="mx-auto"
+            >
+              <PlusCircle size={16} className="mr-2" />
+              Gérer les récompenses
+            </Button>
+          </div>
+        )}
       </div>
+      
+      <AlertDialog open={!!selectedGiftId} onOpenChange={() => selectedGiftId ? cancelDeleteGift() : null}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer la récompense ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action ne peut pas être annulée. La récompense sera supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDeleteGift}>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteGift} className="bg-red-500 hover:bg-red-600">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-};
-
-export default Gifts;
+}
