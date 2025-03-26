@@ -1,27 +1,34 @@
 
 import React from 'react';
-import { Gift as GiftIcon } from 'lucide-react';
+import { Gift as GiftIcon, Coins, User } from 'lucide-react';
 import { Gift } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface GiftCardProps {
   gift: Gift;
   userTokens: number;
+  childName?: string;
 }
 
-const GiftCard = ({ gift, userTokens }: GiftCardProps) => {
+const GiftCard = ({ gift, userTokens, childName }: GiftCardProps) => {
   const canAfford = userTokens >= gift.tokenCost;
 
   return (
-    <div className={`gift-card glass-card rounded-xl p-4 ${canAfford ? 'border-2 border-theme-amber animate-pulse' : ''}`}>
+    <div className={cn(
+      "gift-card glass-card rounded-xl p-4 transition-all",
+      canAfford ? 'border-2 border-theme-amber animate-pulse' : 'border border-gray-200',
+    )}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-bold text-sm">{gift.name}</h3>
         <Badge 
           variant="outline" 
-          className={`flex items-center gap-1 ${canAfford ? 'bg-theme-amber text-white' : 'bg-gray-100'}`}
+          className={cn("flex items-center gap-1", 
+            canAfford ? 'bg-theme-amber text-white' : 'bg-gray-100'
+          )}
         >
           <span>{gift.tokenCost}</span>
-          <GiftIcon size={14} />
+          <Coins size={14} />
         </Badge>
       </div>
       
@@ -41,8 +48,19 @@ const GiftCard = ({ gift, userTokens }: GiftCardProps) => {
         </div>
       )}
 
-      <div className={`mt-3 text-center text-sm font-medium ${canAfford ? 'text-theme-amber' : 'text-gray-400'}`}>
-        {canAfford ? 'Disponible !' : `Il vous manque ${gift.tokenCost - userTokens} tokens`}
+      <div className="mt-3 flex items-center justify-between">
+        <div className={cn("text-sm font-medium", 
+          canAfford ? 'text-theme-amber' : 'text-gray-400'
+        )}>
+          {canAfford ? 'Disponible !' : `Manque ${gift.tokenCost - userTokens}`}
+        </div>
+        
+        {childName && (
+          <div className="flex items-center text-xs text-theme-purple">
+            <User size={12} className="mr-1" /> 
+            <span>{childName}</span>
+          </div>
+        )}
       </div>
     </div>
   );

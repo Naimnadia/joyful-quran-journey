@@ -32,4 +32,5 @@ export interface Gift {
   description: string;
   tokenCost: number;
   imageSrc?: string;
+  assignedToChildId?: string; // Optional: if gift is assigned to specific child
 }

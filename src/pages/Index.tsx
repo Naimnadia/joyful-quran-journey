@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
@@ -27,7 +26,6 @@ const Index = () => {
   const [oldCompletedDays, setOldCompletedDays] = useLocalStorage<string[]>('completedDays', []);
   const [oldRecordings, setOldRecordings] = useLocalStorage<{ date: string, audioUrl: string }[]>('recordings', []);
   
-  // Add the gifts data
   const [gifts, setGifts] = useLocalStorage<GiftType[]>('gifts', [
     {
       id: 'gift-1',
@@ -190,7 +188,6 @@ const Index = () => {
       return new Date(b).getTime() - new Date(a).getTime();
     });
     
-    // Calculate current streak
     let currentStreak = 0;
     
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -212,8 +209,6 @@ const Index = () => {
     
     setStreak(currentStreak);
     
-    // Calculate total tokens based on activities
-    // 1 token per reading, 2 tokens per recording, 5 bonus tokens for perfect week
     const readingTokens = childCompletedDays.length * 1;
     const recordingTokens = childRecordings.length * 2;
     
@@ -223,7 +218,6 @@ const Index = () => {
     const calculatedTotalTokens = readingTokens + recordingTokens + perfectWeekBonus;
     setTotalTokens(calculatedTotalTokens);
     
-    // Update unlocked tokens based on total tokens
     const updatedTokens = [...tokens];
     
     if (calculatedTotalTokens >= 10) {
@@ -252,18 +246,15 @@ const Index = () => {
   }, [childCompletedDays, childRecordings, tokens, setTokens, selectedChildId]);
   
   const checkForPerfectWeek = (completedDays: string[], recordings: string[]): boolean => {
-    // Get current week's date range
     const today = new Date();
-    const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 1 }); // Start week on Monday
+    const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 1 });
     const endOfCurrentWeek = endOfWeek(today, { weekStartsOn: 1 });
     
-    // Get all days in the current week
     const daysInWeek = eachDayOfInterval({
       start: startOfCurrentWeek,
       end: endOfCurrentWeek
     });
     
-    // Check if each day in the week has both a completion and recording
     for (const day of daysInWeek) {
       const formattedDay = format(day, 'yyyy-MM-dd');
       
@@ -275,13 +266,11 @@ const Index = () => {
         recordedDay === formattedDay
       );
       
-      // If any day is missing either completion or recording, return false
       if (!dayCompleted || !dayRecorded) {
         return false;
       }
     }
     
-    // If we got here, all days in the week have both completion and recording
     return true;
   };
   
@@ -314,6 +303,18 @@ const Index = () => {
   
   const selectedChild = children.find(child => child.id === selectedChildId);
   const unlockedTokensCount = tokens.filter(t => t.unlocked).length;
+  
+  const assignGiftToChild = (giftId: string, childId: string) => {
+    setGifts(prev => prev.map(gift => 
+      gift.id === giftId 
+        ? { ...gift, assignedToChildId: childId } 
+        : gift
+    ));
+    toast.success("Cadeau assigné à l'enfant !");
+  };
+  
+  const assignedGifts = gifts.filter(gift => gift.assignedToChildId);
+  const unassignedGifts = gifts.filter(gift => !gift.assignedToChildId);
   
   return (
     <div className="min-h-screen pt-24 pb-10 px-4 bg-gradient-to-b from-blue-50 to-purple-50">
@@ -396,7 +397,6 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Add the gifts section */}
         <div className="glass-card rounded-2xl p-4 animate-scale-in">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
@@ -409,10 +409,37 @@ const Index = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-3">
-            {gifts.map((gift) => (
-              <GiftCard key={gift.id} gift={gift} userTokens={totalTokens} />
-            ))}
+          {assignedGifts.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux assignés</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {assignedGifts.map((gift) => {
+                  const assignedChild = children.find(child => child.id === gift.assignedToChildId);
+                  return (
+                    <GiftCard 
+                      key={gift.id} 
+                      gift={gift} 
+                      userTokens={totalTokens} 
+                      childName={assignedChild?.name}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          <div>
+            <h3 className="text-sm font-medium text-theme-purple mb-2">Cadeaux disponibles</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {unassignedGifts.map((gift) => (
+                <GiftCard 
+                  key={gift.id} 
+                  gift={gift} 
+                  userTokens={totalTokens}
+                  childName={selectedChild?.name}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
