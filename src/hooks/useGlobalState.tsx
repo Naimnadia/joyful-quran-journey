@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Child, CompletedDay, Recording, TokenType, Gift } from '@/types';
 
@@ -107,6 +108,7 @@ export function useGlobalState<T>(key: string, initialValue: T): [T, (value: T |
     
     // Otherwise use the initial value
     globalState[key] = initialValue as any;
+    saveStateToLocalStorage(key, initialValue);
     return initialValue;
   });
 
@@ -162,4 +164,9 @@ export function initializeFromLocalStorage() {
       listeners[key].forEach(listener => listener(globalState[key]));
     }
   });
+}
+
+// Call this when the app loads to ensure data is loaded from localStorage
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', initializeFromLocalStorage);
 }
