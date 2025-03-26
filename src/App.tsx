@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Record from "./pages/Record";
 import Children from "./pages/Children";
 import Gifts from "./pages/Gifts";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/record/:date?" element={<Record />} />
           <Route path="/children" element={<Children />} />
           <Route path="/gifts" element={<Gifts />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -3,8 +3,8 @@ import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
-// Correction de l'import pour utiliser le même chemin que les autres fichiers
-import { buttonVariants } from "@/components/UI/button"
+// Use the original button import to maintain consistency
+import { buttonVariants } from "@/components/ui/button"
 
 const AlertDialog = AlertDialogPrimitive.Root
 
