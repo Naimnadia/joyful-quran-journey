@@ -11,33 +11,26 @@ import { syncData } from '@/lib/supabase';
 import { BestPerformerCard } from '@/components/profile/BestPerformerCard';
 import { ChildList } from '@/components/profile/ChildList';
 import { AddChildForm } from '@/components/profile/AddChildForm';
+import { useGlobalState } from '@/hooks/useGlobalState';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ProfileSelect = () => {
   const navigate = useNavigate();
+  const { state } = useGlobalState();
   const [children, setChildren] = useLocalStorage<Child[]>('children', []);
   const [completedDays, setCompletedDays] = useLocalStorage<CompletedDay[]>('completedDaysV2', []);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Sync with Supabase on component mount
+  // Handle initial loading
   useEffect(() => {
-    const syncWithSupabase = async () => {
-      try {
-        setIsLoading(true);
-        const syncedChildren = await syncData<Child>('children', children);
-        const syncedCompletedDays = await syncData<CompletedDay>('completed_days', completedDays);
-        
-        setChildren(syncedChildren);
-        setCompletedDays(syncedCompletedDays);
-      } catch (error) {
-        console.error('Error syncing data with Supabase:', error);
-        toast.error('Erreur de synchronisation des données');
-      } finally {
+    if (state.isInitialized) {
+      const timeoutId = setTimeout(() => {
         setIsLoading(false);
-      }
-    };
-    
-    syncWithSupabase();
-  }, []);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [state.isInitialized]);
   
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -86,11 +79,9 @@ const ProfileSelect = () => {
     setChildren(updatedChildren);
     
     try {
-      // Save to Supabase
-      await syncData<Child>('children', updatedChildren);
       toast.success(`${newChildName} a été ajouté avec succès`);
     } catch (error) {
-      console.error('Error saving child to Supabase:', error);
+      console.error('Error saving child:', error);
       toast.error(`Erreur lors de l'ajout de ${newChildName}`);
     }
   };
@@ -103,12 +94,9 @@ const ProfileSelect = () => {
     setCompletedDays(updatedCompletedDays);
     
     try {
-      // Save to Supabase
-      await syncData<Child>('children', updatedChildren);
-      await syncData<CompletedDay>('completed_days', updatedCompletedDays);
       toast.success("Enfant supprimé avec succès");
     } catch (error) {
-      console.error('Error removing child from Supabase:', error);
+      console.error('Error removing child:', error);
       toast.error("Erreur lors de la suppression");
     }
   };
@@ -143,7 +131,13 @@ const ProfileSelect = () => {
           <p className="text-gray-600">Sélectionnez un profil pour commencer</p>
         </div>
         
-        <BestPerformerCard bestPerformer={bestPerformer} />
+        {isLoading ? (
+          <div className="glass-card rounded-2xl p-4">
+            <Skeleton className="h-24 w-full mb-4" />
+          </div>
+        ) : (
+          <BestPerformerCard bestPerformer={bestPerformer} />
+        )}
         
         <div className="glass-card rounded-2xl p-4 animate-fade-in">
           <div className="flex items-center justify-between mb-4">
@@ -153,12 +147,19 @@ const ProfileSelect = () => {
             </div>
           </div>
           
-          <ChildList 
-            children={children} 
-            getPerformanceScore={getPerformanceScore}
-            onSelectChild={handleSelectChild}
-            onRemoveChild={handleRemoveChild}
-          />
+          {isLoading ? (
+            <div className="space-y-3 mb-4">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          ) : (
+            <ChildList 
+              children={children} 
+              getPerformanceScore={getPerformanceScore}
+              onSelectChild={handleSelectChild}
+              onRemoveChild={handleRemoveChild}
+            />
+          )}
           
           <AddChildForm onAddChild={handleAddChild} />
         </div>

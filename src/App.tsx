@@ -12,7 +12,7 @@ import Children from "./pages/Children";
 import Gifts from "./pages/Gifts";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
-import { initializeFromBackend, GlobalStateProvider } from "./hooks/useGlobalState";
+import { GlobalStateProvider } from "./hooks/useGlobalState";
 
 const queryClient = new QueryClient();
 
@@ -20,14 +20,12 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize data synchronization with the backend
-    initializeFromBackend()
-      .catch(error => {
-        console.error("Failed to initialize backend connection:", error);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    // Just a short delay to ensure everything is ready
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 
   if (isLoading) {

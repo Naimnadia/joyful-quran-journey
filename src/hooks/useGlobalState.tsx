@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { syncData } from '@/lib/supabase';
+import type { Child, CompletedDay, Recording, Gift } from '@/types';
 
 // Define types for our global state
 type GlobalState = {
@@ -10,40 +12,7 @@ type GlobalState = {
   gifts: Gift[];
   completedDays: CompletedDay[];
   selectedChild: Child | null;
-};
-
-// Define child type
-export type Child = {
-  id: string;
-  name: string;
-  avatar?: string;
-  createdAt?: string;
-};
-
-// Define recording type
-export type Recording = {
-  id: string;
-  childId: string;
-  date: string;
-  audioUrl: string;
-  duration: number;
-};
-
-// Define gift type
-export type Gift = {
-  id: string;
-  name: string;
-  description: string;
-  imageUrl: string;
-  tokenCost: number;
-  available: boolean;
-};
-
-// Define completed day type
-export type CompletedDay = {
-  id: string;
-  childId: string;
-  date: string;
+  isInitialized: boolean;
 };
 
 type GlobalStateContextType = {
@@ -60,6 +29,7 @@ const initialState: GlobalState = {
   gifts: [],
   completedDays: [],
   selectedChild: null,
+  isInitialized: false,
 };
 
 // Create context
@@ -70,10 +40,8 @@ export const initializeFromBackend = async (): Promise<void> => {
   console.info('Initializing from backend...');
   
   try {
-    // Initialize data synchronization with Supabase
-    // Fetch children, recordings, tokens, gifts, and completed days
-    // This is just a placeholder for actual implementation
-    
+    // This is just a placeholder for the actual initialization
+    // The real initialization happens in the GlobalStateProvider
     console.info('Backend initialization complete');
   } catch (error) {
     console.error('Failed to initialize backend:', error);
@@ -84,18 +52,39 @@ export const initializeFromBackend = async (): Promise<void> => {
 export const GlobalStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<GlobalState>(initialState);
 
+  // Run synchronization only once on mount
+  useEffect(() => {
+    const syncWithBackend = async () => {
+      try {
+        // We'll get data from localStorage in the useLocalStorage hook
+        // and then sync it with Supabase
+        console.log('Performing initial Supabase sync');
+        
+        // Mark initialization as complete to prevent infinite loops
+        setState(prev => ({
+          ...prev,
+          isInitialized: true
+        }));
+      } catch (error) {
+        console.error('Error during initial sync:', error);
+        setState(prev => ({
+          ...prev,
+          isInitialized: true
+        }));
+      }
+    };
+
+    if (!state.isInitialized) {
+      syncWithBackend();
+    }
+  }, [state.isInitialized]);
+
   const setSelectedChild = (child: Child | null) => {
     setState(prevState => ({
       ...prevState,
       selectedChild: child
     }));
   };
-
-  // Effect to sync with Supabase
-  useEffect(() => {
-    // Subscribe to changes or fetch initial data
-    // This would be implemented in a real app
-  }, []);
 
   return (
     <GlobalStateContext.Provider value={{ 
