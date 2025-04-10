@@ -226,9 +226,9 @@ const Index = () => {
             Changer de profil
           </Button>
           
-          <div className="glass-card rounded-full px-4 py-2 inline-flex items-center">
+          <div className="glass-card rounded-full px-4 py-2 inline-flex items-center bg-fuchsia-950">
             <User size={10} className="text-theme-purple mr-2" />
-            <span className="text-theme-purple font-medium">
+            <span className="font-medium text-slate-50">
               {selectedChild?.name || 'Profil'}
             </span>
           </div>
