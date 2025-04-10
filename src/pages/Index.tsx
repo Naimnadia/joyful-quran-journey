@@ -251,10 +251,7 @@ const Index = () => {
         <Calendar completedDays={childCompletedDays} recordedDays={childRecordings} />
         
         <div className="flex space-x-3 animate-slide-in">
-          <Button variant="default" className="w-full" onClick={markTodayAsCompleted}>
-            <BookOpen size={10} className="mr-2" />
-            Marquer comme lu
-          </Button>
+          
           
           <Button variant="secondary" className="w-full" onClick={recordToday}>
             <Mic size={10} className="mr-2" />
