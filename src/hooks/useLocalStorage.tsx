@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useGlobalState } from './useGlobalState';
 import { toast } from 'sonner';
 import { syncData } from '@/lib/supabase';
+import type { Child, CompletedDay, Recording, Gift } from '@/types';
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const { state, setState } = useGlobalState();
@@ -30,18 +31,33 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
         try {
           // Convert key to a valid table name
           const tableName = key === 'completedDaysV2' ? 'completed_days' : key;
-          // @ts-ignore: Suppressing type error for simplicity
-          const syncedData = await syncData(tableName, localValue);
           
-          if (JSON.stringify(syncedData) !== JSON.stringify(localValue)) {
-            setLocalValue(syncedData);
-            window.localStorage.setItem(key, JSON.stringify(syncedData));
+          // Explicitly type the syncedData based on the key
+          if (key === 'children') {
+            const syncedData = await syncData<Child[]>(tableName, localValue as Child[]);
             
-            // Update global state if needed
-            if (key === 'children') {
-              setState(prev => ({ ...prev, children: syncedData }));
-            } else if (key === 'completedDaysV2') {
-              setState(prev => ({ ...prev, completedDays: syncedData }));
+            if (JSON.stringify(syncedData) !== JSON.stringify(localValue)) {
+              setLocalValue(syncedData as unknown as T);
+              window.localStorage.setItem(key, JSON.stringify(syncedData));
+              
+              // Update global state with properly typed data
+              setState(prev => ({ 
+                ...prev, 
+                children: syncedData 
+              }));
+            }
+          } else if (key === 'completedDaysV2') {
+            const syncedData = await syncData<CompletedDay[]>(tableName, localValue as CompletedDay[]);
+            
+            if (JSON.stringify(syncedData) !== JSON.stringify(localValue)) {
+              setLocalValue(syncedData as unknown as T);
+              window.localStorage.setItem(key, JSON.stringify(syncedData));
+              
+              // Update global state with properly typed data
+              setState(prev => ({ 
+                ...prev, 
+                completedDays: syncedData 
+              }));
             }
           }
         } catch (error) {
@@ -67,11 +83,17 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
       
-      // Update global state if needed
+      // Update global state if needed with proper type casting
       if (key === 'children') {
-        setState(prev => ({ ...prev, children: valueToStore as any }));
+        setState(prev => ({ 
+          ...prev, 
+          children: valueToStore as Child[] 
+        }));
       } else if (key === 'completedDaysV2') {
-        setState(prev => ({ ...prev, completedDays: valueToStore as any }));
+        setState(prev => ({ 
+          ...prev, 
+          completedDays: valueToStore as CompletedDay[] 
+        }));
       }
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);

@@ -40,7 +40,7 @@ export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
     return (transformedData || []) as unknown as T[];
   } catch (error) {
     console.error(`Error fetching ${table}:`, error);
-    return [];
+    return [] as T[];
   }
 }
 
