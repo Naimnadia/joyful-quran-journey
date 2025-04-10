@@ -102,7 +102,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       {audioURL && <div className="mb-4">
           <audio ref={audioRef} src={audioURL} controls className="w-full"></audio>
           <div className="flex justify-center items-center space-x-4 mt-2">
-            <Button variant="ghost" onClick={playRecording} className="text-blue-500 hover:bg-blue-100">
+            <Button variant="ghost" onClick={playRecording} className="bg-indigo-300 hover:bg-indigo-200 text-gray-900">
               <Play size={20} className="mr-2" />
               Écouter
             </Button>
@@ -114,12 +114,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         </div>}
       
       <div className="flex justify-center items-center space-x-4 mx-[9px] my-px px-[20px] py-0">
-        <Button variant="default" onClick={saveRecording} disabled={!audioURL} className="w-24 text-purple-50 text-left rounded-md text-sm mx-0 my-0 px-[73px] py-0">
+        <Button variant="default" onClick={saveRecording} disabled={!audioURL} className="w-24 text-purple-50 text-left rounded-md mx-0 my-0 py-0 text-xs px-[72px] bg-fuchsia-950 hover:bg-fuchsia-800">
           <Save size={16} className="mr-2" />
           Sauvegarder
         </Button>
         
-        {audioURL && <Button variant="destructive" onClick={deleteRecording} className="w-24">
+        {audioURL && <Button variant="destructive" onClick={deleteRecording} className="w-24 px-[62px] bg-indigo-300 hover:bg-indigo-200 text-[#0c1703]">
             <Trash size={16} className="mr-2" />
             Supprimer
           </Button>}
