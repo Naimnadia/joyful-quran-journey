@@ -114,12 +114,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         </div>}
       
       <div className="flex justify-center items-center space-x-4 mx-[9px] my-px px-[20px] py-0">
-        <Button variant="default" onClick={saveRecording} disabled={!audioURL} className="w-24 text-left rounded-md mx-0 my-0 py-0 text-xs px-[72px] bg-gray-50 text-purple-950">
+        <Button variant="default" onClick={saveRecording} disabled={!audioURL} className="w-24 text-left rounded-md mx-0 my-0 py-0 text-xs px-[72px] text-purple-950 bg-lime-300 hover:bg-lime-200">
           <Save size={16} className="mr-2" />
           Sauvegarder
         </Button>
         
-        {audioURL && <Button variant="destructive" onClick={deleteRecording} className="w-24 px-[62px] bg-indigo-300 hover:bg-indigo-200 text-[#0c1703]">
+        {audioURL && <Button variant="destructive" onClick={deleteRecording} className="w-24 px-[62px] text-[#0c1703] bg-slate-50">
             <Trash size={16} className="mr-2" />
             Supprimer
           </Button>}
