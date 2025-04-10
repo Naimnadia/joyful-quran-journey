@@ -102,7 +102,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       {audioURL && <div className="mb-4">
           <audio ref={audioRef} src={audioURL} controls className="w-full"></audio>
           <div className="flex justify-center items-center space-x-4 mt-2">
-            <Button variant="ghost" onClick={playRecording} className="bg-indigo-300 hover:bg-indigo-200 text-gray-900">
+            <Button variant="ghost" onClick={playRecording} className="text-gray-900 bg-[#fafdff]/5">
               <Play size={20} className="mr-2" />
               Écouter
             </Button>
