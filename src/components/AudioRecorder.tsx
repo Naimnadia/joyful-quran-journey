@@ -90,7 +90,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       <h2 className="text-lg font-medium mb-4">Enregistrement de la lecture</h2>
       
       <div className="flex justify-center items-center space-x-4 mb-4">
-        {!recording ? <Button variant="ghost" onClick={startRecording} disabled={recording} className="bg-lime-500 hover:bg-lime-400 text-fuchsia-950 px-[47px]">
+        {!recording ? <Button variant="ghost" onClick={startRecording} disabled={recording} className="bg-lime-500 hover:bg-lime-400 px-[47px] text-purple-950">
             <Mic size={20} className="mr-2" />
             Commencer
           </Button> : <Button variant="ghost" onClick={stopRecording} disabled={!recording} className="text-red-500 hover:bg-red-100">
@@ -114,7 +114,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         </div>}
       
       <div className="flex justify-center items-center space-x-4 mx-[9px] my-px px-[20px] py-0">
-        <Button variant="default" onClick={saveRecording} disabled={!audioURL} className="w-24 text-purple-50 text-left rounded-md mx-0 my-0 py-0 text-xs px-[72px] bg-fuchsia-950 hover:bg-fuchsia-800">
+        <Button variant="default" onClick={saveRecording} disabled={!audioURL} className="w-24 text-left rounded-md mx-0 my-0 py-0 text-xs px-[72px] bg-gray-50 text-purple-950">
           <Save size={16} className="mr-2" />
           Sauvegarder
         </Button>
