@@ -239,10 +239,7 @@ const Index = () => {
           
           
           
-          <div className="glass-card rounded-2xl p-3 text-center bg-amber-200">
-            <div className="text-theme-amber text-2xl font-bold">{totalTokens}</div>
-            <div className="text-xs text-gray-600">Tokens gagnés</div>
-          </div>
+          
         </div>
         
         <Calendar completedDays={childCompletedDays} recordedDays={childRecordings} />
