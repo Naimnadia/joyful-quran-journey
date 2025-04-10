@@ -237,10 +237,7 @@ const Index = () => {
         <div className="grid grid-cols-3 gap-3 animate-fade-in">
           
           
-          <div className="glass-card rounded-2xl p-3 text-center">
-            <div className="text-theme-purple text-2xl font-bold">{totalReadings}</div>
-            <div className="text-xs text-gray-600">Lectures totales</div>
-          </div>
+          
           
           <div className="glass-card rounded-2xl p-3 text-center">
             <div className="text-theme-amber text-2xl font-bold">{totalTokens}</div>
