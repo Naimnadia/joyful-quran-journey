@@ -17,6 +17,12 @@ const config: CapacitorConfig = {
       androidScaleType: "CENTER_CROP",
     },
   },
+  android: {
+    buildOptions: {
+      keystorePath: 'android/app/my-release-key.keystore',
+      keystoreAlias: 'key0',
+    }
+  }
 };
 
 export default config;

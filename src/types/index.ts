@@ -7,6 +7,7 @@ export interface Child {
 }
 
 export interface Recording {
+  id?: string; // Adding an optional id field for database operations
   date: string;
   audioUrl: string;
   childId?: string; // Link recordings to children
@@ -22,6 +23,7 @@ export interface TokenType {
 }
 
 export type CompletedDay = {
+  id?: string; // Adding an optional id field for database operations
   date: string;
   childId: string;
 };

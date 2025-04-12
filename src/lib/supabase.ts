@@ -18,8 +18,9 @@ export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
     let tableName = table;
     
     // Use any type initially to avoid type errors
+    // The 'as string' cast here helps TypeScript understand we're passing a valid table name string
     const { data, error } = await supabase
-      .from(tableName as any)
+      .from(tableName as string)
       .select('*');
     
     if (error) throw error;
@@ -63,7 +64,6 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
       }));
     } else if (table === 'completed_days') {
       transformedData = (data as unknown as CompletedDay[]).map((item: CompletedDay) => ({
-        id: item.id,
         date: item.date,
         child_id: item.childId
       }));
@@ -74,11 +74,11 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
     // Only delete and insert if we have data to save
     if (transformedData.length > 0) {
       try {
-        // Remove all existing data
+        // Remove all existing data - using a safer approach without the .not() method
         const { error: deleteError } = await supabase
-          .from(tableName as any)
+          .from(tableName as string)
           .delete()
-          .not('id', 'is', null);
+          .gte('id', ''); // This is a safer way to delete all rows
         
         if (deleteError) throw deleteError;
       } catch (deleteError) {
@@ -89,8 +89,8 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
       // Insert new data
       try {
         const { error: insertError } = await supabase
-          .from(tableName as any)
-          .insert(transformedData);
+          .from(tableName as string)
+          .insert(transformedData as any);
         
         if (insertError) throw insertError;
       } catch (insertError) {
