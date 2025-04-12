@@ -11,20 +11,22 @@ export interface Tables {
   gifts: Gift;
 }
 
-// Helper functions for data access
+// Helper functions for data access - with type safety
 export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
   try {
     // Convert table names if needed
     let tableName = table;
     
+    // Use any type initially to avoid type errors
     const { data, error } = await supabase
-      .from(tableName)
+      .from(tableName as any)
       .select('*');
     
     if (error) throw error;
     
     // Transform data if needed (convert snake_case fields to camelCase)
-    let transformedData = data;
+    let transformedData: any[] = data || [];
+    
     if (table === 'children') {
       transformedData = data.map((item: any) => ({
         ...item,
@@ -37,7 +39,7 @@ export async function fetchData<T>(table: keyof Tables): Promise<T[]> {
       }));
     }
     
-    return (transformedData || []) as unknown as T[];
+    return transformedData as T[];
   } catch (error) {
     console.error(`Error fetching ${table}:`, error);
     return [] as T[];
@@ -50,30 +52,31 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
     let tableName = table;
     
     // Transform data if needed (convert camelCase fields to snake_case)
-    let transformedData;
+    let transformedData: any[] = [];
+    
     if (table === 'children') {
-      transformedData = data.map((item: any) => ({
+      transformedData = (data as unknown as Child[]).map((item: Child) => ({
         id: item.id,
         name: item.name,
         created_at: item.createdAt || new Date().toISOString(),
         avatar: item.avatar
       }));
     } else if (table === 'completed_days') {
-      transformedData = data.map((item: any) => ({
+      transformedData = (data as unknown as CompletedDay[]).map((item: CompletedDay) => ({
         id: item.id,
         date: item.date,
         child_id: item.childId
       }));
     } else {
-      transformedData = data;
+      transformedData = data as any[];
     }
     
     // Only delete and insert if we have data to save
     if (transformedData.length > 0) {
-      // Remove all existing data
       try {
+        // Remove all existing data
         const { error: deleteError } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .delete()
           .not('id', 'is', null);
         
@@ -86,8 +89,8 @@ export async function saveData<T>(table: keyof Tables, data: T[]): Promise<void>
       // Insert new data
       try {
         const { error: insertError } = await supabase
-          .from(tableName)
-          .insert(transformedData as any[]);
+          .from(tableName as any)
+          .insert(transformedData);
         
         if (insertError) throw insertError;
       } catch (insertError) {

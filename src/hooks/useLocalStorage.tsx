@@ -27,14 +27,15 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   // Sync with Supabase on first render if required
   useEffect(() => {
     const performSync = async () => {
-      if (state.isInitialized && (key === 'children' || key === 'completedDaysV2')) {
+      if (state.isInitialized && state.isOnline && (key === 'children' || key === 'completedDaysV2')) {
         try {
           // Convert key to a valid table name
           const tableName = key === 'completedDaysV2' ? 'completed_days' : key;
           
-          // Explicitly type the syncedData based on the key
+          // Handle children data with proper typing
           if (key === 'children') {
-            const syncedData = await syncData<Child[]>(tableName, localValue as Child[]);
+            const localChildren = localValue as Child[];
+            const syncedData = await syncData<Child>(tableName, localChildren);
             
             if (JSON.stringify(syncedData) !== JSON.stringify(localValue)) {
               setLocalValue(syncedData as unknown as T);
@@ -46,8 +47,11 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
                 children: syncedData 
               }));
             }
-          } else if (key === 'completedDaysV2') {
-            const syncedData = await syncData<CompletedDay[]>(tableName, localValue as CompletedDay[]);
+          } 
+          // Handle completed days data with proper typing
+          else if (key === 'completedDaysV2') {
+            const localCompletedDays = localValue as CompletedDay[];
+            const syncedData = await syncData<CompletedDay>(tableName, localCompletedDays);
             
             if (JSON.stringify(syncedData) !== JSON.stringify(localValue)) {
               setLocalValue(syncedData as unknown as T);
@@ -67,7 +71,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     };
     
     performSync();
-  }, [key, state.isInitialized]);
+  }, [key, state.isInitialized, state.isOnline]);
   
   // Update function that will update both local state and localStorage
   const setValue = (value: T | ((val: T) => T)) => {

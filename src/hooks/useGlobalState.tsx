@@ -13,6 +13,7 @@ type GlobalState = {
   completedDays: CompletedDay[];
   selectedChild: Child | null;
   isInitialized: boolean;
+  isOnline: boolean;
 };
 
 type GlobalStateContextType = {
@@ -30,6 +31,7 @@ const initialState: GlobalState = {
   completedDays: [],
   selectedChild: null,
   isInitialized: false,
+  isOnline: navigator.onLine,
 };
 
 // Create context
@@ -51,6 +53,25 @@ export const initializeFromBackend = async (): Promise<void> => {
 // Provider component
 export const GlobalStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<GlobalState>(initialState);
+
+  // Monitor online status for mobile
+  useEffect(() => {
+    const handleOnline = () => {
+      setState(prev => ({ ...prev, isOnline: true }));
+    };
+
+    const handleOffline = () => {
+      setState(prev => ({ ...prev, isOnline: false }));
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Run synchronization only once on mount
   useEffect(() => {
